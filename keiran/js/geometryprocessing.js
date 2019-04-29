@@ -62,7 +62,6 @@ function convertToHalfEdge(geometry) {
 			}
 
 			var edgeKey = [vertex, nextVertex].sort().join();
-			console.log(vertex, nextVertex);
 			if (aHalfEdges[edgeKey] == undefined) {
 				halfedge.edge = new AEdge(halfedge);
 				aHalfEdges[edgeKey] = halfedge;
@@ -121,4 +120,24 @@ function getVertexNormalsHE(geometry) {
 		vertexNormals[vertices[i].idx] = face.vertexNormals[vertices[i].faceidx];
 	}
 	return vertexNormals;
+}
+
+function updateSilhouette(camera, mesh, edges) {
+	var matrixWorld = mesh.matrixWorld;
+	var cameraPos = camera.position.clone().applyMatrix4(camera.matrixWorldInverse);
+	mesh.geometry.computeFaceNormals();
+	var faces = mesh.geometry.faces;
+	for (var i = 0; i < edges.length; i++) {
+		var edge = edges[i];
+		var v = mesh.geometry.vertices[edge.halfedge.vertex.idx].clone().applyMatrix4(mesh.modelViewMatrix);
+		var cameraDir = cameraPos.clone().sub(v);
+		var f1 = faces[edge.halfedge.face.idx];
+		var f2 = faces[edge.halfedge.twin.face.idx];
+		var n1 = f1.normal.clone().applyMatrix3(mesh.normalMatrix);
+		var n2 = f2.normal.clone().applyMatrix3(mesh.normalMatrix);
+		var d1 = n1.dot(cameraDir);
+		var d2 = n2.dot(cameraDir);
+		edge.sil = d1 * d2 <= 0.0005;
+		edge.line.visible = edge.sil;
+	}
 }
