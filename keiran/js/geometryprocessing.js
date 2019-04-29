@@ -32,6 +32,7 @@ class AFace {
 }
 
 function convertToHalfEdge(geometry) {
+	geometry.mergeVertices();
 	var vertices = geometry.vertices;
 	var faces = geometry.faces;
 	var keys = ['a', 'b', 'c'];
@@ -122,11 +123,14 @@ function getVertexNormalsHE(geometry) {
 	return vertexNormals;
 }
 
-function updateSilhouette(camera, mesh, edges) {
+function getSilhouetteVertices(camera, mesh, edges) {
 	var matrixWorld = mesh.matrixWorld;
 	var cameraPos = camera.position.clone().applyMatrix4(camera.matrixWorldInverse);
 	mesh.geometry.computeFaceNormals();
 	var faces = mesh.geometry.faces;
+	var sEdges = {};
+	var vertices = [];
+	var edgelist = [];
 	for (var i = 0; i < edges.length; i++) {
 		var edge = edges[i];
 		var v = mesh.geometry.vertices[edge.halfedge.vertex.idx].clone().applyMatrix4(mesh.modelViewMatrix);
@@ -137,7 +141,58 @@ function updateSilhouette(camera, mesh, edges) {
 		var n2 = f2.normal.clone().applyMatrix3(mesh.normalMatrix);
 		var d1 = n1.dot(cameraDir);
 		var d2 = n2.dot(cameraDir);
-		edge.sil = d1 * d2 <= 0.0005;
-		edge.line.visible = edge.sil;
+		edge.sil = d1 * d2 <= 0.0002;
+		if (edge.sil) {
+			if (sEdges[edge.halfedge.vertex.idx] == undefined) {
+				sEdges[edge.halfedge.vertex.idx] = [];
+			}
+			if (sEdges[edge.halfedge.twin.vertex.idx] == undefined) {
+				sEdges[edge.halfedge.twin.vertex.idx] = [];
+			}
+			sEdges[edge.halfedge.vertex.idx].push(edge.halfedge.twin.vertex.idx);
+			sEdges[edge.halfedge.twin.vertex.idx].push(edge.halfedge.vertex.idx);
+			edgelist.push([edge.halfedge.vertex.idx, edge.halfedge.twin.vertex.idx]);
+		}
 	}
+	var start = 0;
+	for (var key in sEdges) {
+		if (sEdges[parseInt(key)].length > 1) {
+			start = parseInt(key);
+			break;
+		}
+	}
+	vertices.push(start);
+
+	var findCycle = function(graph, start, prev, v, visited) {
+		var neighbors = graph[v];
+		visited.add(v);
+		var candidates = [];
+		for (var i = 0; i < neighbors.length; i++) {
+			if (neighbors[i] != prev && neighbors[i] == start) {
+				return [neighbors[i]];
+			}
+			if (neighbors[i] != prev && !visited.has(neighbors[i])) {
+				var res = findCycle(graph, start, v, neighbors[i], visited);
+				if (res != undefined) {
+					candidates.push([neighbors[i]].concat(res));
+				}
+			}
+		}
+		// TODO: We need to filter out cycles that show up
+		// that aren't the main one. Not sure how though.
+		if (candidates.length > 0) {
+			var max = candidates[0];
+			var maxLen = candidates[0].length;
+			for (var i = 1; i < candidates.length; i++) {
+				if (candidates[i].length > maxLen) {
+					maxLen = candidates[i].length;
+					max = candidates[i];
+				}
+			}
+			return max;
+		}
+		return undefined;
+	}
+
+	return findCycle(sEdges, start, start, start, new Set());
 }
