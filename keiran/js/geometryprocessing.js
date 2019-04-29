@@ -43,7 +43,7 @@ function convertToHalfEdge(geometry) {
 		var hs = [];
 		for (var j = 0; j < keys.length; j++) {
 			var vertex = faces[i][keys[j]];
-			var nextVertex = faces[i][keys[(j + 1) % hs.length]];
+			var nextVertex = faces[i][keys[(j + 1) % keys.length]];
 
 			var halfedge = new AHalfEdge();
 
@@ -62,6 +62,7 @@ function convertToHalfEdge(geometry) {
 			}
 
 			var edgeKey = [vertex, nextVertex].sort().join();
+			console.log(vertex, nextVertex);
 			if (aHalfEdges[edgeKey] == undefined) {
 				halfedge.edge = new AEdge(halfedge);
 				aHalfEdges[edgeKey] = halfedge;
@@ -75,7 +76,7 @@ function convertToHalfEdge(geometry) {
 			hs.push(halfedge);
 		}
 		for (var j = 0; j < hs.length; j++) {
-			hs[j].next = hs[(j + 1) % hs.length];
+			hs[j].next = hs[(j + 1) % keys.length];
 		}
 		halfedges.push(...hs);
 	}
@@ -84,9 +85,14 @@ function convertToHalfEdge(geometry) {
 	for (var key in aVertices) {
 		allVertices.push(aVertices[key]);
 	}
+	var allEdges = [];
+	for (var key in aHalfEdges) {
+		allEdges.push(aHalfEdges[key].edge);
+	}
 	return {
 		'halfedges': halfedges,
-		'vertices': allVertices
+		'vertices': allVertices,
+		'edges': allEdges
 	};
 }
 
