@@ -3,6 +3,7 @@ var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHei
 
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0xffffff);
 document.body.appendChild(renderer.domElement);
 
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -22,33 +23,44 @@ octohedron.position.set(2, 0, 0);
 var boxHalfedgeGeometry = convertToHalfEdge(boxGeometry);
 var octohedronHalfedgeGeometry = convertToHalfEdge(octohedronGeometry);
 
-function addSillhouetteStrokes(halfedgeGeometry, geometry, mesh) {
-	var group = new THREE.Group();
-	scene.add(group);
-	for (var i = 0 ; i < halfedgeGeometry.edges.length; i++) {
-		var edge = halfedgeGeometry.edges[i];
-		var v1 = edge.halfedge.vertex.idx;
-		var v2 = edge.halfedge.twin.vertex.idx;
-		var lineGeometry = new THREE.Geometry();
-		lineGeometry.vertices = [geometry.vertices[v1].clone(), geometry.vertices[v2].clone()];
-		var line = new MeshLine();
-		line.setGeometry(lineGeometry);
-		var lineMesh = new THREE.Mesh(line.geometry, new MeshLineMaterial({
-			sizeAttenuation: false,
-			resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-			near: camera.near,
-			far: camera.far,
-			lineWidth: 6,
-			color: 0xffffff
-		}));
-		edge.line = lineMesh;
-		group.add(lineMesh);
-	}
-	group.position.copy(mesh.position);
+function initSilhouetteGeometry(mesh) {
+	var lineGeometry = new THREE.Geometry();
+	var v1pos = new THREE.Vector3(0, 0, 0);
+	var v2pos = new THREE.Vector3(1, 0, 0);
+	lineGeometry.vertices = [v1pos, v2pos];
+	var line = new MeshLine();
+	line.setGeometry(lineGeometry);
+	var lineMesh = new THREE.Mesh(line.geometry, new MeshLineMaterial({
+		sizeAttenuation: false,
+		resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+		near: camera.near,
+		far: camera.far,
+		lineWidth: 10,
+		color: 0x000000,
+		depthTest: false
+	}));
+	lineMesh.position.copy(mesh.position);
+	return lineMesh;
 }
 
-addSillhouetteStrokes(boxHalfedgeGeometry, boxGeometry, cube);
-addSillhouetteStrokes(octohedronHalfedgeGeometry, octohedronGeometry, octohedron);
+var cubeSilhouetteMesh = initSilhouetteGeometry(cube);
+var octSilhouetteMesh = initSilhouetteGeometry(octohedron);
+
+scene.add(cubeSilhouetteMesh);
+scene.add(octSilhouetteMesh);
+
+function setSilhouetteGeometry(silhouetteMesh, vertices, mesh) {
+	var lineGeometry = new THREE.Geometry();
+	var v = [];
+	for (var i = 0; i < vertices.length; i++) {
+		v.push(mesh.geometry.vertices[vertices[i]]);
+	}
+	v.push(mesh.geometry.vertices[vertices[0]]);
+	lineGeometry.vertices = v;
+	var line = new MeshLine();
+	line.setGeometry(lineGeometry);
+	silhouetteMesh.geometry = line.geometry;
+}
 
 camera.position.z = 5;
 
@@ -56,8 +68,11 @@ function animate() {
 
 	requestAnimationFrame(animate);
 
-	updateSilhouette(camera, cube, boxHalfedgeGeometry.edges);
-	updateSilhouette(camera, octohedron, octohedronHalfedgeGeometry.edges);
+	var cubeSilhouetteVertices = getSilhouetteVertices(camera, cube, boxHalfedgeGeometry.edges);
+	var octSilhouetteVertices = getSilhouetteVertices(camera, octohedron, octohedronHalfedgeGeometry.edges);
+
+	setSilhouetteGeometry(cubeSilhouetteMesh, cubeSilhouetteVertices, cube);
+	setSilhouetteGeometry(octSilhouetteMesh, octSilhouetteVertices, octohedron);
 
 	controls.update();
 	renderer.render(scene, camera);
