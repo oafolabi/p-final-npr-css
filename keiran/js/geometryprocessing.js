@@ -166,7 +166,7 @@ function getSilhouetteVertices(camera, mesh, edges) {
 	var findCycle = function(graph, start, prev, v, visited) {
 		var neighbors = graph[v];
 		visited.add(v);
-		var candidates = [];
+		// var candidates = [];
 		for (var i = 0; i < neighbors.length; i++) {
 			if (neighbors[i] != prev && neighbors[i] == start) {
 				return [neighbors[i]];
@@ -174,23 +174,23 @@ function getSilhouetteVertices(camera, mesh, edges) {
 			if (neighbors[i] != prev && !visited.has(neighbors[i])) {
 				var res = findCycle(graph, start, v, neighbors[i], visited);
 				if (res != undefined) {
-					candidates.push([neighbors[i]].concat(res));
+					return [neighbors[i]].concat(res);
 				}
 			}
 		}
 		// TODO: We need to filter out cycles that show up
 		// that aren't the main one. Not sure how though.
-		if (candidates.length > 0) {
-			var max = candidates[0];
-			var maxLen = candidates[0].length;
-			for (var i = 1; i < candidates.length; i++) {
-				if (candidates[i].length > maxLen) {
-					maxLen = candidates[i].length;
-					max = candidates[i];
-				}
-			}
-			return max;
-		}
+		// if (candidates.length > 0) {
+		// 	var max = candidates[0];
+		// 	var maxLen = candidates[0].length;
+		// 	for (var i = 1; i < candidates.length; i++) {
+		// 		if (candidates[i].length > maxLen) {
+		// 			maxLen = candidates[i].length;
+		// 			max = candidates[i];
+		// 		}
+		// 	}
+		// 	return max;
+		// }
 		return undefined;
 	}
 
