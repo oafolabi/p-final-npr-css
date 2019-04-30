@@ -37,6 +37,7 @@ function convertToHalfEdge(geometry) {
 	var keys = ['a', 'b', 'c'];
 	var halfedges = [];
 	var aHalfEdges = {};
+    var bHalfEdges = {};
 	var aVertices = {};
 	var aFaces = {};
 	for (var i = 0; i < faces.length; i++) {
@@ -79,6 +80,36 @@ function convertToHalfEdge(geometry) {
 		}
 		halfedges.push(...hs);
 	}
+
+    var boundaryHE = new Set();
+    for (var key in aHalfEdges) {
+        if (aHalfEdges[key].twin == undefined) {
+            var halfedge = new AHalfEdge();
+            boundaryHE.add(halfedge);
+            halfedge.twin = aHalfEdges[key];
+            halfedge.vertex = aHalfEdges[key].next.vertex;
+            halfedge.edge = aHalfEdges[key];
+            // need to assign next
+            aHalfEdges[key].twin = halfedge;
+        }
+    }
+    var unconnectedHE = new Set(boundaryHE);
+    while (unconnectedHE.size != 0) {
+        var he = unconnectedHE.values().next().value;
+        var firsthe = he;
+        // loop around and connect to all the halfedges in this boundary
+        while (he.next == undefined) {
+            var ne = he;
+            while (ne.twin.face != undefined) {
+                ne = ne.twin.next.next;
+            } 
+            unconnectedHE.delete(he);
+            ne = ne.twin;
+            he.next = ne;
+            he = ne;
+        }
+        unconnectedHE.delete(he);
+    }
 
 	var allVertices = [];
 	for (var key in aVertices) {
