@@ -64,6 +64,55 @@ function setSilhouetteGeometry(silhouetteMesh, vertices, mesh) {
 
 camera.position.z = 5;
 
+var cubeWireframe = new THREE.WireframeGeometry(boxGeometry);
+var cubeLines = new THREE.LineSegments(cubeWireframe);
+var octWireframe = new THREE.WireframeGeometry(octohedronGeometry);
+var octLines = new THREE.LineSegments(octWireframe);
+octLines.position.set(2, 0, 0);
+scene.add(cubeLines);
+scene.add(octLines);
+
+cubeLines.visible = false;
+octLines.visible = false;
+// cubeSilhouetteMesh.visible = false;
+// octSilhouetteMesh.visible = false;
+
+function testStrokeTransform() {
+	var wavyStroke = [];
+	var resolution = 100;
+	for (var i = 0; i < resolution; i++) {
+		wavyStroke.push(new THREE.Vector2(i / resolution, 0.05 * Math.sin(2 * Math.PI * (i / (0.2 * resolution)))));
+	}
+
+	var waypoints = [];
+
+	for(var j = 0; j < 2 * Math.PI; j += 2 * Math.PI / 100) {
+		waypoints.push(new THREE.Vector2(Math.cos(j), Math.sin(j)));
+	}
+
+	var v = waypointsToStylized(wavyStroke, waypoints);
+	for (var i = 0; i < v.length; i++) {
+		v[i] = new THREE.Vector3(v[i].x, v[i].y, 0);
+	}
+
+	var lineGeometry = new THREE.Geometry();
+	lineGeometry.vertices = v;
+	var line = new MeshLine();
+	line.setGeometry(lineGeometry);
+	var lineMesh = new THREE.Mesh(line.geometry, new MeshLineMaterial({
+		sizeAttenuation: false,
+		resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+		near: camera.near,
+		far: camera.far,
+		lineWidth: 10,
+		color: 0x000000,
+		depthTest: false
+	}));
+	scene.add(lineMesh);
+}
+
+testStrokeTransform();
+
 function animate() {
 
 	requestAnimationFrame(animate);

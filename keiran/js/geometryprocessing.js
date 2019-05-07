@@ -227,3 +227,52 @@ function getSilhouetteVertices(camera, mesh, edges) {
 
 	return findCycle(sEdges, start, start, start, new Set());
 }
+
+function transformPoint(strokePoint, waypoints) {
+	var distance = 0;
+	var latestDistance = 1;
+	var p = waypoints[0];
+	var i = 0;
+	waypoints[-1] = waypoints[0];
+	while (distance < strokePoint.x && i < waypoints.length - 1) {
+		i++;
+		latestDistance = p.distanceTo(waypoints[i]);
+		p = waypoints[i];
+		distance += latestDistance;
+	}
+	var t = (strokePoint.x - (distance - latestDistance)) / latestDistance;
+	var basePoint = waypoints[i - 1].clone().lerp(p, t);
+	var dir = p.clone().sub(waypoints[i - 1]);
+	if (dir.x == 0) {
+		var normal = new THREE.Vector2(1, 0).normalize();
+	} else {
+		var normal = new THREE.Vector2(-dir.y / dir.x, 1).normalize();
+	}
+	var res = basePoint.addScaledVector(normal, strokePoint.y);
+	return res;
+}
+
+function waypointsToStylized(strokePoints, waypoints) {
+	var totalDistance = 0;
+	for (var i = 0; i < waypoints.length - 1; i++) {
+		totalDistance += waypoints[i].distanceTo(waypoints[i + 1])
+	}
+	var totalDistanceCovered = 0;
+	var vertices = [];
+	var i = 0;
+	var clippedDistance = 0;
+	while (totalDistanceCovered < totalDistance) {
+		totalDistanceCovered = strokePoints[i].x + clippedDistance;
+		var shiftedPoint = strokePoints[i].clone();
+		shiftedPoint.x += clippedDistance;
+		vertices.push(transformPoint(shiftedPoint, waypoints));
+		i++;
+		if (i == strokePoints.length) {
+			clippedDistance += strokePoints[i - 1].x;
+			i = 0;
+		}
+	}
+	return vertices;
+}
+
+
