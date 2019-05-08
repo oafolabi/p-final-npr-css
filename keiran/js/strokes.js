@@ -1,12 +1,20 @@
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+var canvas = document.createElement('canvas');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+var ctx = canvas.getContext("2d");
+
+canvas.style = "pointer-events: none; z-index:10"
 
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0xffffff);
 document.body.appendChild(renderer.domElement);
+document.body.appendChild(canvas);
 
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.update();
 
 var boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 var octohedronGeometry = new THREE.OctahedronGeometry();
@@ -62,6 +70,23 @@ function setSilhouetteGeometry(silhouetteMesh, vertices, mesh) {
 	silhouetteMesh.geometry = line.geometry;
 }
 
+function getSilhouetteLine(vertices, mesh, stroke) {
+	var waypoints = [];
+	for (var i = 0; i < vertices.length; i++) {
+		waypoints.push(mesh.geometry.vertices[vertices[i]]);
+	}
+	waypoints.push(mesh.geometry.vertices[vertices[0]]);
+
+	for (var i = 0; i < waypoints.length; i++) {
+		waypoints[i] = pointToScreenPosition(waypoints[i].clone().applyMatrix4(mesh.matrixWorld), camera, renderer);
+		waypoints[i] = new THREE.Vector2(waypoints[i].x, waypoints[i].y);
+	}
+
+	var v = waypointsToStylized(stroke, waypoints);
+
+	return v;
+}
+
 camera.position.z = 5;
 
 var cubeWireframe = new THREE.WireframeGeometry(boxGeometry);
@@ -74,44 +99,40 @@ scene.add(octLines);
 
 cubeLines.visible = false;
 octLines.visible = false;
-// cubeSilhouetteMesh.visible = false;
-// octSilhouetteMesh.visible = false;
+cubeSilhouetteMesh.visible = false;
+octSilhouetteMesh.visible = false;
 
-function testStrokeTransform() {
-	var wavyStroke = [];
-	var resolution = 100;
-	for (var i = 0; i < resolution; i++) {
-		wavyStroke.push(new THREE.Vector2(i / resolution, 0.05 * Math.sin(2 * Math.PI * (i / (0.2 * resolution)))));
-	}
-
-	var waypoints = [];
-
-	for(var j = 0; j < 2 * Math.PI; j += 2 * Math.PI / 100) {
-		waypoints.push(new THREE.Vector2(Math.cos(j), Math.sin(j)));
-	}
-
-	var v = waypointsToStylized(wavyStroke, waypoints);
-	for (var i = 0; i < v.length; i++) {
-		v[i] = new THREE.Vector3(v[i].x, v[i].y, 0);
-	}
-
-	var lineGeometry = new THREE.Geometry();
-	lineGeometry.vertices = v;
-	var line = new MeshLine();
-	line.setGeometry(lineGeometry);
-	var lineMesh = new THREE.Mesh(line.geometry, new MeshLineMaterial({
-		sizeAttenuation: false,
-		resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-		near: camera.near,
-		far: camera.far,
-		lineWidth: 10,
-		color: 0x000000,
-		depthTest: false
-	}));
-	scene.add(lineMesh);
+var wavyStroke = [];
+var resolution = 100;
+var unitLength = 100;
+for (var i = 0; i < resolution; i++) {
+	wavyStroke.push(new THREE.Vector2(i * unitLength / resolution, 3 * Math.sin(2 * Math.PI * (i / (0.2 * resolution)))));
 }
 
-testStrokeTransform();
+var loopyStroke = [];
+for(var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
+	var v = new THREE.Vector2(0.1 * unitLength * Math.cos(j) + ((j * unitLength) / (6 * Math.PI)), 0.07 * unitLength * Math.sin(j));
+	loopyStroke.push(v);
+}
+
+var lowWavyStroke = [];
+for(var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
+	var v = new THREE.Vector2(Math.cos(j) + ((j * unitLength) / (6 * Math.PI)), Math.sin(j));
+	lowWavyStroke.push(v);
+}
+
+function render2DLines(lines) {
+	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	ctx.lineWidth = 5;
+	for (var j = 0; j < lines.length; j++) {
+		ctx.beginPath();
+		ctx.moveTo(lines[j][0].x, lines[j][0].y);
+		for (var i = 1; i < lines[j].length; i++) {
+			ctx.lineTo(lines[j][i].x, lines[j][i].y);
+		}
+		ctx.stroke();
+	}
+}
 
 function animate() {
 
@@ -120,10 +141,17 @@ function animate() {
 	var cubeSilhouetteVertices = getSilhouetteVertices(camera, cube, boxHalfedgeGeometry.edges);
 	var octSilhouetteVertices = getSilhouetteVertices(camera, octohedron, octohedronHalfedgeGeometry.edges);
 
-	setSilhouetteGeometry(cubeSilhouetteMesh, cubeSilhouetteVertices, cube);
-	setSilhouetteGeometry(octSilhouetteMesh, octSilhouetteVertices, octohedron);
+	// setSilhouetteGeometry(cubeSilhouetteMesh, cubeSilhouetteVertices, cube);
+	// setSilhouetteGeometry(octSilhouetteMesh, octSilhouetteVertices, octohedron);
 
 	controls.update();
 	renderer.render(scene, camera);
+
+	var lines = [];
+
+	lines.push(getSilhouetteLine(cubeSilhouetteVertices, cube, loopyStroke));
+	lines.push(getSilhouetteLine(octSilhouetteVertices, octohedron, lowWavyStroke));
+
+	render2DLines(lines);
 }
 animate();

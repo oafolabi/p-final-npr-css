@@ -198,17 +198,20 @@ function getSilhouetteVertices(camera, mesh, edges) {
 		var neighbors = graph[v];
 		visited.add(v);
 		// var candidates = [];
-		for (var i = 0; i < neighbors.length; i++) {
-			if (neighbors[i] != prev && neighbors[i] == start) {
-				return [neighbors[i]];
-			}
-			if (neighbors[i] != prev && !visited.has(neighbors[i])) {
-				var res = findCycle(graph, start, v, neighbors[i], visited);
-				if (res != undefined) {
-					return [neighbors[i]].concat(res);
+		if (neighbors != undefined) {
+			for (var i = 0; i < neighbors.length; i++) {
+				if (neighbors[i] != prev && neighbors[i] == start) {
+					return [neighbors[i]];
+				}
+				if (neighbors[i] != prev && !visited.has(neighbors[i])) {
+					var res = findCycle(graph, start, v, neighbors[i], visited);
+					if (res != undefined) {
+						return [neighbors[i]].concat(res);
+					}
 				}
 			}
 		}
+
 		// TODO: We need to filter out cycles that show up
 		// that aren't the main one. Not sure how though.
 		// if (candidates.length > 0) {
@@ -273,6 +276,20 @@ function waypointsToStylized(strokePoints, waypoints) {
 		}
 	}
 	return vertices;
+}
+
+function pointToScreenPosition(point, camera, renderer) {
+	camera.updateMatrixWorld();
+	var widthHalf = 0.5 * renderer.context.canvas.width;
+    var heightHalf = 0.5 * renderer.context.canvas.height;
+	var vector = point.clone();
+	vector.project(camera);
+	vector.x = (vector.x * widthHalf) + widthHalf;
+	vector.y = -(vector.y * heightHalf) + heightHalf;
+	return { 
+        x: vector.x,
+        y: vector.y
+    };
 }
 
 
