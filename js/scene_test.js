@@ -98,8 +98,8 @@ function main() {
   }
 
   {
-    const gltfLoader = new THREE.GLTFLoader();
-    gltfLoader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/teacup/scene.gltf', (gltf) => {
+    const gltfLoader = new THREE.LegacyGLTFLoader();
+    gltfLoader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/teapot/teapot.gltf', (gltf) => {
       const root = gltf.scene;
       scene.add(root);
       console.log(dumpObject(root).join('\n'));
