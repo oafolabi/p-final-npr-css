@@ -231,6 +231,25 @@ function getSilhouetteVertices(camera, mesh, edges) {
 	return findCycle(sEdges, start, start, start, new Set());
 }
 
+function getCreases(mesh, edges) {
+	mesh.geometry.computeFaceNormals();
+	var faces = mesh.geometry.faces;
+	var creases = [];
+	for (var i = 0; i < edges.length; i++) {
+		var edge = edges[i];
+		var f1 = faces[edge.halfedge.face.idx];
+		var f2 = faces[edge.halfedge.twin.face.idx];
+		var d = f1.normal.clone().dot(f2.normal);
+		// right now we check if the cosine of the angle is less than a value
+		if (d < 1) {
+			var v1 = edge.halfedge.vertex.idx;
+			var v2 = edge.halfedge.twin.vertex.idx;
+			creases.push([v1, v2]);
+		}
+	}
+	return creases;
+}
+
 function transformPoint(strokePoint, waypoints) {
 	var distance = 0;
 	var latestDistance = 1;
@@ -244,6 +263,9 @@ function transformPoint(strokePoint, waypoints) {
 		distance += latestDistance;
 	}
 	var t = (strokePoint.x - (distance - latestDistance)) / latestDistance;
+	if (t > 1) {
+		t = 1;
+	}
 	var basePoint = waypoints[i - 1].clone().lerp(p, t);
 	var dir = p.clone().sub(waypoints[i - 1]);
 	if (dir.x == 0) {
@@ -251,7 +273,11 @@ function transformPoint(strokePoint, waypoints) {
 	} else {
 		var normal = new THREE.Vector2(-dir.y / dir.x, 1).normalize();
 	}
-	var res = basePoint.addScaledVector(normal, strokePoint.y);
+	var displacement = strokePoint.y;
+	if (t == 0 || t == 1) {
+		displacement = 0;
+	}
+	var res = basePoint.addScaledVector(normal, displacement);
 	return res;
 }
 

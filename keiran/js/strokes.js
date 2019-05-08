@@ -87,6 +87,33 @@ function getSilhouetteLine(vertices, mesh, stroke) {
 	return v;
 }
 
+function getCreaseLines(creases, silhouette, mesh, stroke) {
+	var lines = [];
+	var silhouetteEdges = new Set();
+	for (var i = 0; i < silhouette.length; i++) {
+		silhouetteEdges.add([silhouette[i], silhouette[(i + 1)  % silhouette.length]].join());
+		silhouetteEdges.add([silhouette[(i + 1)  % silhouette.length], silhouette[i]].join());
+	}
+	for (var i = 0; i < creases.length; i++) {
+		var crease = creases[i];
+		if (!silhouetteEdges.has(crease.join())) {
+			var waypoints = [];
+			for (var j = 0; j < crease.length; j++) {
+				waypoints.push(mesh.geometry.vertices[crease[j]]);
+			}
+
+			for (var j = 0; j < waypoints.length; j++) {
+				waypoints[j] = pointToScreenPosition(waypoints[j].clone().applyMatrix4(mesh.matrixWorld), camera, renderer);
+				waypoints[j] = new THREE.Vector2(waypoints[j].x, waypoints[j].y);
+			}
+
+			var v = waypointsToStylized(stroke, waypoints);
+			lines.push(v);
+		}
+	}
+	return lines;
+}
+
 camera.position.z = 5;
 
 var cubeWireframe = new THREE.WireframeGeometry(boxGeometry);
@@ -110,15 +137,21 @@ for (var i = 0; i < resolution; i++) {
 }
 
 var loopyStroke = [];
-for(var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
+for (var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
 	var v = new THREE.Vector2(0.1 * unitLength * Math.cos(j) + ((j * unitLength) / (6 * Math.PI)), 0.07 * unitLength * Math.sin(j));
 	loopyStroke.push(v);
 }
 
 var lowWavyStroke = [];
-for(var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
+for (var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
 	var v = new THREE.Vector2(Math.cos(j) + ((j * unitLength) / (6 * Math.PI)), Math.sin(j));
 	lowWavyStroke.push(v);
+}
+
+var randomStroke = [];
+for (var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
+	var v = new THREE.Vector2(unitLength * (j * 0.9 + Math.random() * 0.03), unitLength * Math.random() * 0.04);
+	randomStroke.push(v);
 }
 
 function render2DLines(lines) {
@@ -134,12 +167,16 @@ function render2DLines(lines) {
 	}
 }
 
+var cubeCreases = getCreases(cube, boxHalfedgeGeometry.edges);
+var octCreases = getCreases(octohedron, octohedronHalfedgeGeometry.edges);
+
 function animate() {
 
 	requestAnimationFrame(animate);
 
 	var cubeSilhouetteVertices = getSilhouetteVertices(camera, cube, boxHalfedgeGeometry.edges);
 	var octSilhouetteVertices = getSilhouetteVertices(camera, octohedron, octohedronHalfedgeGeometry.edges);
+
 
 	// setSilhouetteGeometry(cubeSilhouetteMesh, cubeSilhouetteVertices, cube);
 	// setSilhouetteGeometry(octSilhouetteMesh, octSilhouetteVertices, octohedron);
@@ -149,8 +186,11 @@ function animate() {
 
 	var lines = [];
 
-	lines.push(getSilhouetteLine(cubeSilhouetteVertices, cube, loopyStroke));
-	lines.push(getSilhouetteLine(octSilhouetteVertices, octohedron, lowWavyStroke));
+	lines.push(getSilhouetteLine(cubeSilhouetteVertices, cube, randomStroke));
+	lines.push(getSilhouetteLine(octSilhouetteVertices, octohedron, randomStroke));
+
+	lines.push(...getCreaseLines(cubeCreases, cubeSilhouetteVertices, cube, randomStroke));
+	lines.push(...getCreaseLines(octCreases, octSilhouetteVertices, octohedron, randomStroke));
 
 	render2DLines(lines);
 }
