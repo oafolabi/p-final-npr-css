@@ -26,11 +26,12 @@ var cupHE = [];
 //var cupGeo = [];
 var cupMesh = [];
 {
-    const gltfLoader = new THREE.GLTFLoader();
-    gltfLoader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/teacup/scene.gltf', (gltf) => {
+    const gltfLoader = new THREE.LegacyGLTFLoader();
+    gltfLoader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/teapot/teapot.gltf', (gltf) => {
       root = gltf.scene;
       cup = root.getObjectByName('teacup_HR_Geometryobjcleanermaterialmergergles');
       scene.add(root);
+      console.log("loaded");
       console.log(dumpObject(root).join('\n'));
      // cars = root.getObjectByName('teacup_HR_Geometryobjcleanermaterialmergergles');
       // compute the box that contains all the stuff
