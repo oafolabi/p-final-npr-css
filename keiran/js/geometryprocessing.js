@@ -154,13 +154,12 @@ function getVertexNormalsHE(geometry) {
 	return vertexNormals;
 }
 
-function getSilhouetteVertices(camera, mesh, edges) {
+function getSilhouettes(camera, mesh, edges) {
 	var matrixWorld = mesh.matrixWorld;
 	var cameraPos = camera.position.clone().applyMatrix4(camera.matrixWorldInverse);
 	mesh.geometry.computeFaceNormals();
 	var faces = mesh.geometry.faces;
 	var sEdges = {};
-	var vertices = [];
 	var edgelist = [];
 	for (var i = 0; i < edges.length; i++) {
 		var edge = edges[i];
@@ -172,7 +171,7 @@ function getSilhouetteVertices(camera, mesh, edges) {
 		var n2 = f2.normal.clone().applyMatrix3(mesh.normalMatrix);
 		var d1 = n1.dot(cameraDir);
 		var d2 = n2.dot(cameraDir);
-		edge.sil = d1 * d2 <= 0.0002;
+		edge.sil = d1 * d2 <= 0.00002;
 		if (edge.sil) {
 			if (sEdges[edge.halfedge.vertex.idx] == undefined) {
 				sEdges[edge.halfedge.vertex.idx] = [];
@@ -185,14 +184,7 @@ function getSilhouetteVertices(camera, mesh, edges) {
 			edgelist.push([edge.halfedge.vertex.idx, edge.halfedge.twin.vertex.idx]);
 		}
 	}
-	var start = 0;
-	for (var key in sEdges) {
-		if (sEdges[parseInt(key)].length > 1) {
-			start = parseInt(key);
-			break;
-		}
-	}
-	vertices.push(start);
+	
 
 	var findCycle = function(graph, start, prev, v, visited) {
 		var neighbors = graph[v];
@@ -211,24 +203,26 @@ function getSilhouetteVertices(camera, mesh, edges) {
 				}
 			}
 		}
-
-		// TODO: We need to filter out cycles that show up
-		// that aren't the main one. Not sure how though.
-		// if (candidates.length > 0) {
-		// 	var max = candidates[0];
-		// 	var maxLen = candidates[0].length;
-		// 	for (var i = 1; i < candidates.length; i++) {
-		// 		if (candidates[i].length > maxLen) {
-		// 			maxLen = candidates[i].length;
-		// 			max = candidates[i];
-		// 		}
-		// 	}
-		// 	return max;
-		// }
 		return undefined;
 	}
 
-	return findCycle(sEdges, start, start, start, new Set());
+	var visited = new Set();
+	var nextCycle = undefined;
+	var silhouettes = [];
+	do {
+		var start = 0;
+		for (var key in sEdges) {
+			if (!visited.has(parseInt(key))) {
+				start = parseInt(key);
+				break;
+			}
+		}
+		nextCycle = findCycle(sEdges, start, start, start, visited);
+		if (nextCycle != undefined) {
+			silhouettes.push(nextCycle);
+		}
+	} while (nextCycle != undefined);
+	return silhouettes;
 }
 
 function getCreases(mesh, edges) {
@@ -241,10 +235,8 @@ function getCreases(mesh, edges) {
 		var f2 = faces[edge.halfedge.twin.face.idx];
 		var d = f1.normal.clone().dot(f2.normal);
 		// right now we check if the cosine of the angle is less than a value
-		if (d < 1) {
-			var v1 = edge.halfedge.vertex.idx;
-			var v2 = edge.halfedge.twin.vertex.idx;
-			creases.push([v1, v2]);
+		if (d < 0.5) {
+			creases.push(edge);
 		}
 	}
 	return creases;
@@ -277,8 +269,12 @@ function transformPoint(strokePoint, waypoints) {
 	if (t == 0 || t == 1) {
 		displacement = 0;
 	}
-	var res = basePoint.addScaledVector(normal, displacement);
-	return res;
+	var res = basePoint.clone().addScaledVector(normal, displacement);
+	return {
+		point: res,
+		reference: basePoint,
+		waypoint: i
+	};
 }
 
 function waypointsToStylized(strokePoints, waypoints) {

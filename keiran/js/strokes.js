@@ -1,4 +1,5 @@
 var scene = new THREE.Scene();
+var renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 var canvas = document.createElement('canvas');
 canvas.width = window.innerWidth;
@@ -17,10 +18,12 @@ var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.update();
 
 var boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+boxGeometry = new THREE.TorusGeometry(0.6, 0.3, 8, 12);
 var octohedronGeometry = new THREE.OctahedronGeometry();
 
 var greenMaterial = new THREE.MeshBasicMaterial({color: 0x00ff00});
 var blueMaterial = new THREE.MeshBasicMaterial({color: 0x0000ff});
+var whiteMaterial = new THREE.MeshBasicMaterial({color: 0xffffff});
 var cube = new THREE.Mesh(boxGeometry, greenMaterial);
 var octohedron = new THREE.Mesh(octohedronGeometry, blueMaterial);
 scene.add(cube);
@@ -31,71 +34,106 @@ octohedron.position.set(2, 0, 0);
 var boxHalfedgeGeometry = convertToHalfEdge(boxGeometry);
 var octohedronHalfedgeGeometry = convertToHalfEdge(octohedronGeometry);
 
-function initSilhouetteGeometry(mesh) {
-	var lineGeometry = new THREE.Geometry();
-	var v1pos = new THREE.Vector3(0, 0, 0);
-	var v2pos = new THREE.Vector3(1, 0, 0);
-	lineGeometry.vertices = [v1pos, v2pos];
-	var line = new MeshLine();
-	line.setGeometry(lineGeometry);
-	var lineMesh = new THREE.Mesh(line.geometry, new MeshLineMaterial({
-		sizeAttenuation: false,
-		resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-		near: camera.near,
-		far: camera.far,
-		lineWidth: 10,
-		color: 0x000000,
-		depthTest: false
-	}));
-	lineMesh.position.copy(mesh.position);
-	return lineMesh;
+function getRandomColor() {
+	var letters = '0123456789ABCDEF';
+	var color = '0x';
+	for (var i = 0; i < 6; i++) {
+		color += letters[Math.floor(Math.random() * 16)];
+	}
+	return parseInt(color, 16);
 }
 
-var cubeSilhouetteMesh = initSilhouetteGeometry(cube);
-var octSilhouetteMesh = initSilhouetteGeometry(octohedron);
+var usedEdgeID = new Set();
 
-scene.add(cubeSilhouetteMesh);
-scene.add(octSilhouetteMesh);
-
-function setSilhouetteGeometry(silhouetteMesh, vertices, mesh) {
-	var lineGeometry = new THREE.Geometry();
-	var v = [];
-	for (var i = 0; i < vertices.length; i++) {
-		v.push(mesh.geometry.vertices[vertices[i]]);
+function createEdgeDetectionMesh(mesh, edges) {
+	for (var i = 0; i < edges.length; i++) {
+		var edge = edges[i];
+		var v1 = mesh.geometry.vertices[edge.halfedge.vertex.idx];
+		var v2 = mesh.geometry.vertices[edge.halfedge.twin.vertex.idx];
+		var g = new THREE.Geometry();
+		g.vertices = [v1, v2];
+		var color = 0x000000;
+		do {
+			color = getRandomColor();
+		} while (usedEdgeID.has(color));
+		edge.id = color;
+		var material = new MeshLineMaterial({
+			color: color,
+			lineWidth: 10,
+			sizeAttenuation: false,
+			resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
+			near: camera.near,
+			far: camera.far,
+		});
+		var line = new MeshLine();
+		line.setGeometry(g);
+		var m = new THREE.Mesh(line.geometry, material);
+		m.position.copy(mesh.position);
+		scene.add(m);
+		edge.line = m;
 	}
-	v.push(mesh.geometry.vertices[vertices[0]]);
-	lineGeometry.vertices = v;
-	var line = new MeshLine();
-	line.setGeometry(lineGeometry);
-	silhouetteMesh.geometry = line.geometry;
 }
 
-function getSilhouetteLine(vertices, mesh, stroke) {
-	var waypoints = [];
-	for (var i = 0; i < vertices.length; i++) {
-		waypoints.push(mesh.geometry.vertices[vertices[i]]);
+function setEdgeIDEnabled(edges, enabled) {
+	for (var i = 0; i < edges.length; i++) {
+		var edge = edges[i];
+		edge.line.visible = enabled;
 	}
-	waypoints.push(mesh.geometry.vertices[vertices[0]]);
-
-	for (var i = 0; i < waypoints.length; i++) {
-		waypoints[i] = pointToScreenPosition(waypoints[i].clone().applyMatrix4(mesh.matrixWorld), camera, renderer);
-		waypoints[i] = new THREE.Vector2(waypoints[i].x, waypoints[i].y);
-	}
-
-	var v = waypointsToStylized(stroke, waypoints);
-
-	return v;
 }
 
-function getCreaseLines(creases, silhouette, mesh, stroke) {
+createEdgeDetectionMesh(cube, boxHalfedgeGeometry.edges);
+createEdgeDetectionMesh(octohedron, octohedronHalfedgeGeometry.edges);
+
+function getSilhouetteLines(silhouettes, mesh, edges, stroke, buffer) {
+	var edgesHash = {};
+	for (var i = 0; i < edges.length; i++) {
+		var edge = edges[i];
+		var v1 = edge.halfedge.vertex.idx;
+		var v2 = edge.halfedge.twin.vertex.idx;
+		edgesHash[[v1, v2].join()] = edge.id;
+		edgesHash[[v2, v1].join()] = edge.id;
+	}
+	var lines = [];
+	for (var j = 0; j < silhouettes.length; j++) {
+		var vertices = silhouettes[j];
+		var waypoints = [];
+		vertices.push(vertices[0]);
+		for (var i = 0; i < vertices.length; i++) {
+			waypoints.push(mesh.geometry.vertices[vertices[i]]);
+		}
+
+		for (var i = 0; i < waypoints.length; i++) {
+			waypoints[i] = pointToScreenPosition(waypoints[i].clone().applyMatrix4(mesh.matrixWorld), camera, renderer);
+			waypoints[i] = new THREE.Vector2(waypoints[i].x, waypoints[i].y);
+		}
+
+		var v = waypointsToStylized(stroke, waypoints);
+		for (var i = 0; i < v.length; i++) {
+
+			var v1 = vertices[v[i].waypoint];
+			var v2 = vertices[v[i].waypoint - 1];
+			v[i].visible = checkVisibility(v[i].reference, edgesHash[[v1, v2].join()], buffer);
+		}
+		lines.push(v);
+	}
+	return lines;
+}
+
+function getCreaseLines(creases, silhouettes, mesh, stroke, buffer) {
 	var lines = [];
 	var silhouetteEdges = new Set();
-	for (var i = 0; i < silhouette.length; i++) {
-		silhouetteEdges.add([silhouette[i], silhouette[(i + 1)  % silhouette.length]].join());
-		silhouetteEdges.add([silhouette[(i + 1)  % silhouette.length], silhouette[i]].join());
+	for (var i = 0; i < silhouettes.length; i++) {
+		var vertices = silhouettes[i];
+		for (var j = 0; j < vertices.length; j++) {
+			silhouetteEdges.add([vertices[j], vertices[(j + 1)  % vertices.length]].join());
+			silhouetteEdges.add([vertices[(j + 1)  % vertices.length], vertices[j]].join());
+		}
 	}
 	for (var i = 0; i < creases.length; i++) {
-		var crease = creases[i];
+		var edge = creases[i];
+		var v1 = edge.halfedge.vertex.idx;
+		var v2 = edge.halfedge.twin.vertex.idx;
+		var crease = [v1, v2];
 		if (!silhouetteEdges.has(crease.join())) {
 			var waypoints = [];
 			for (var j = 0; j < crease.length; j++) {
@@ -108,10 +146,41 @@ function getCreaseLines(creases, silhouette, mesh, stroke) {
 			}
 
 			var v = waypointsToStylized(stroke, waypoints);
+			for (var j = 0; j < v.length; j++) {
+				v[j].visible = checkVisibility(v[j].reference, edge.id, buffer);
+			}
 			lines.push(v);
 		}
 	}
 	return lines;
+}
+
+const rgbToHex = (r, g, b) => '0x' + [r, g, b].map(x => {
+  	const hex = x.toString(16)
+	return hex.length === 1 ? '0' + hex : hex
+}).join('')
+
+function checkVisibility(point, id, buffer) {
+	var detectionRadius = 5;
+	point = point.clone().floor();
+	point.y = window.innerHeight - point.y;
+	for (var i = -detectionRadius; i < detectionRadius; i++) {
+		for (var j = -detectionRadius; j < detectionRadius; j++) {
+			var offset = new THREE.Vector2(i, j);
+			var p = offset.add(point);
+			var pixelIndex = ((p.y * window.innerWidth) + p.x) * 4;
+			if (pixelIndex < buffer.length - 2 && pixelIndex >= 0) {
+				var r = buffer[pixelIndex + 0];
+				var g = buffer[pixelIndex + 1];
+				var b = buffer[pixelIndex + 2];
+				var hex = (r << 16) | (g << 8) | (b);
+				if (hex == id) {
+					return true;
+				}			
+			}
+		}
+	}
+	return false;
 }
 
 camera.position.z = 5;
@@ -126,8 +195,6 @@ scene.add(octLines);
 
 cubeLines.visible = false;
 octLines.visible = false;
-cubeSilhouetteMesh.visible = false;
-octSilhouetteMesh.visible = false;
 
 var wavyStroke = [];
 var resolution = 100;
@@ -154,14 +221,28 @@ for (var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
 	randomStroke.push(v);
 }
 
+var straightStroke = [];
+for (var j = 0; j < 10; j++) {
+	var v = new THREE.Vector2(j * unitLength / 10, 0);
+	straightStroke.push(v);
+}
+
 function render2DLines(lines) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	ctx.lineWidth = 5;
 	for (var j = 0; j < lines.length; j++) {
+		var visible = false;
 		ctx.beginPath();
-		ctx.moveTo(lines[j][0].x, lines[j][0].y);
-		for (var i = 1; i < lines[j].length; i++) {
-			ctx.lineTo(lines[j][i].x, lines[j][i].y);
+		for (var i = 0; i < lines[j].length; i++) {
+			var p = lines[j][i];
+			if (p.visible && !visible) {
+				visible = true;
+				ctx.moveTo(p.point.x, p.point.y);
+			} else if (p.visible) {
+				ctx.lineTo(p.point.x, p.point.y);
+			} else {
+				visible = false;
+			}
 		}
 		ctx.stroke();
 	}
@@ -174,23 +255,30 @@ function animate() {
 
 	requestAnimationFrame(animate);
 
-	var cubeSilhouetteVertices = getSilhouetteVertices(camera, cube, boxHalfedgeGeometry.edges);
-	var octSilhouetteVertices = getSilhouetteVertices(camera, octohedron, octohedronHalfedgeGeometry.edges);
-
-
-	// setSilhouetteGeometry(cubeSilhouetteMesh, cubeSilhouetteVertices, cube);
-	// setSilhouetteGeometry(octSilhouetteMesh, octSilhouetteVertices, octohedron);
+	var cubeSilhouettes = getSilhouettes(camera, cube, boxHalfedgeGeometry.edges);
+	var octSilhouettes = getSilhouettes(camera, octohedron, octohedronHalfedgeGeometry.edges);
 
 	controls.update();
+
+	setEdgeIDEnabled(boxHalfedgeGeometry.edges, true);
+	setEdgeIDEnabled(octohedronHalfedgeGeometry.edges, true);
+	renderer.setRenderTarget(renderTarget);
+	renderer.render(scene, camera);
+	var outputBuffer = new Uint8Array(window.innerWidth * window.innerHeight * 4);
+	renderer.readRenderTargetPixels(renderTarget, 0, 0, window.innerWidth, window.innerHeight, outputBuffer);
+
+	setEdgeIDEnabled(boxHalfedgeGeometry.edges, false);
+	setEdgeIDEnabled(octohedronHalfedgeGeometry.edges, false);
+	renderer.setRenderTarget(null);
 	renderer.render(scene, camera);
 
 	var lines = [];
 
-	lines.push(getSilhouetteLine(cubeSilhouetteVertices, cube, randomStroke));
-	lines.push(getSilhouetteLine(octSilhouetteVertices, octohedron, randomStroke));
+	lines.push(...getSilhouetteLines(cubeSilhouettes, cube, boxHalfedgeGeometry.edges, randomStroke, outputBuffer));
+	lines.push(...getSilhouetteLines(octSilhouettes, octohedron, octohedronHalfedgeGeometry.edges, randomStroke, outputBuffer));
 
-	lines.push(...getCreaseLines(cubeCreases, cubeSilhouetteVertices, cube, randomStroke));
-	lines.push(...getCreaseLines(octCreases, octSilhouetteVertices, octohedron, randomStroke));
+	lines.push(...getCreaseLines(cubeCreases, cubeSilhouettes, cube, randomStroke, outputBuffer));
+	lines.push(...getCreaseLines(octCreases, octSilhouettes, octohedron, randomStroke, outputBuffer));
 
 	render2DLines(lines);
 }
