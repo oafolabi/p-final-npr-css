@@ -24,8 +24,8 @@ var octohedronGeometry = new THREE.OctahedronGeometry();
 var greenMaterial = new THREE.MeshToonMaterial({color: 0x00ff00, shininess: 5});
 var blueMaterial = new THREE.MeshToonMaterial({color: 0x0000ff, shininess: 5});
 var whiteMaterial = new THREE.MeshBasicMaterial({color: 0xffffff});
-var cube = new THREE.Mesh(boxGeometry, greenMaterial);
-var octohedron = new THREE.Mesh(octohedronGeometry, blueMaterial);
+var cube = new THREE.Mesh(boxGeometry, whiteMaterial);
+var octohedron = new THREE.Mesh(octohedronGeometry, whiteMaterial);
 scene.add(cube);
 scene.add(octohedron);
 
