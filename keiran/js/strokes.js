@@ -18,7 +18,7 @@ var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.update();
 
 var boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-boxGeometry = new THREE.TorusGeometry(0.6, 0.3, 8, 12);
+// boxGeometry = new THREE.TorusGeometry(0.6, 0.3, 8, 12);
 var octohedronGeometry = new THREE.OctahedronGeometry();
 
 var greenMaterial = new THREE.MeshBasicMaterial({color: 0x00ff00});
