@@ -21,13 +21,19 @@ var boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 // boxGeometry = new THREE.TorusGeometry(0.6, 0.3, 8, 12);
 var octohedronGeometry = new THREE.OctahedronGeometry();
 
-var greenMaterial = new THREE.MeshBasicMaterial({color: 0x00ff00});
-var blueMaterial = new THREE.MeshBasicMaterial({color: 0x0000ff});
+var greenMaterial = new THREE.MeshToonMaterial({color: 0x00ff00, shininess: 5});
+var blueMaterial = new THREE.MeshToonMaterial({color: 0x0000ff, shininess: 5});
 var whiteMaterial = new THREE.MeshBasicMaterial({color: 0xffffff});
 var cube = new THREE.Mesh(boxGeometry, greenMaterial);
 var octohedron = new THREE.Mesh(octohedronGeometry, blueMaterial);
 scene.add(cube);
 scene.add(octohedron);
+
+var dirLight = new THREE.DirectionalLight(0xffffff, 1);
+dirLight.position.set(-1, 1, 1).normalize();
+var ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+scene.add(ambientLight);
+scene.add(dirLight);
 
 octohedron.position.set(2, 0, 0);
 
