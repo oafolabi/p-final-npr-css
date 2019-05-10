@@ -16,7 +16,7 @@ var basePathY = Math.floor(window.innerHeight / 2);
 // array holds a single stroke instance
 // order acts as time
 // !!deprecated
-// var stroke = [];
+var stroke = [];
 
 // path holds multiple separate strokes
 var path = [];
@@ -27,10 +27,9 @@ var mouseDown = false;
 
 var prevVertex = {x: -1, y: -1};
 
-//offsets are stored as floats with a range of 0.0-1.0
 function recordVertex(event) {
-    var offset = (event.clientY - basePathY) / window.innerHeight;
-    var basePathX = event.clientX / window.innerWidth;
+    var offset = event.clientY - basePathY;
+    var basePathX = event.clientX;
     var vertex = [basePathX, offset];
     try {
         path[pathIndex].push(vertex);
@@ -38,6 +37,7 @@ function recordVertex(event) {
     catch(err) {
         path.push([vertex]);
     }
+    stroke.push(new THREE.Vector2(basePathX, offset));
     mouseDown = true;
     canvasX = event.clientX - bounds.left - scrollX;
     canvasY = event.clientY - bounds.top - scrollY;
@@ -54,6 +54,7 @@ function addLineSegment(nextVertex) {
         input_ctx.stroke();
     }
     prevVertex = nextVertex;
+    stroke_input = stroke;
 }
 
 function addPath() {
