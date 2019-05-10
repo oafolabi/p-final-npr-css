@@ -27,7 +27,7 @@ var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.update();
 
 var boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-boxGeometry = new THREE.TorusGeometry(0.6, 0.3, 8, 12);
+//boxGeometry = new THREE.TorusGeometry(0.6, 0.3, 8, 12);
 var octohedronGeometry = new THREE.OctahedronGeometry();
 var cupHE;
 var cupMesh;
@@ -78,8 +78,8 @@ var greenMaterial = new THREE.MeshToonMaterial({color: 0x00ff00, shininess: 5});
 var blueMaterial = new THREE.MeshToonMaterial({color: 0x0000ff, shininess: 5});
 var redMaterial = new THREE.MeshToonMaterial({color: 0xff0000, shininess: 5});
 var whiteMaterial = new THREE.MeshBasicMaterial({color: 0xffffff});
-var cube = new THREE.Mesh(boxGeometry, greenMaterial);
-var octohedron = new THREE.Mesh(octohedronGeometry, blueMaterial);
+var cube = new THREE.Mesh(boxGeometry, whiteMaterial);
+var octohedron = new THREE.Mesh(octohedronGeometry, whiteMaterial);
 
 scene.add(cube);
 scene.add(octohedron);
