@@ -298,25 +298,22 @@ stroke_input = lowWavyStroke;
 
 function render2DLines(lines) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+	ctx.lineWidth = user_lineWidth;
 	for (var j = 0; j < lines.length; j++) {
 		var visible = false;
+		ctx.beginPath();
 		for (var i = 0; i < lines[j].length; i++) {
 			var p = lines[j][i];
-			ctx.lineWidth = user_lineWidth;
-			if (thicknessOrder.length > 0) {
-				ctx.lineWidth = thicknessOrder[Math.floor(i * lines[j].length / unitLength)];
-			}
 			if (p.visible && !visible) {
 				visible = true;
-				ctx.beginPath();
 				ctx.moveTo(p.point.x, p.point.y);
 			} else if (p.visible) {
 				ctx.lineTo(p.point.x, p.point.y);
-				ctx.stroke();
 			} else {
 				visible = false;
 			}
 		}
+		ctx.stroke();
 	}
 }
 
