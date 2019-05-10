@@ -41,7 +41,7 @@ function recordVertex(event) {
     mouseDown = true;
     canvasX = event.clientX - bounds.left - scrollX;
     canvasY = event.clientY - bounds.top - scrollY;
-    addLineSegment({x: canvasX, y: canvasY});
+    requestAnimationFrame(addLineSegment({x: canvasX, y: canvasY}));
 }
 
 function addLineSegment(nextVertex) {
