@@ -1,7 +1,14 @@
+// stroke init
+var stroke_input;
+
+// global stroke res controls
+var resolution = 100;
+var unitLength = 100;
+
 var scene = new THREE.Scene();
 var renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-var canvas = document.createElement('canvas');
+var canvas = document.getElementById('render_canvas');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 var ctx = canvas.getContext("2d");
@@ -30,7 +37,8 @@ var cupCreases;
     const loader = new THREE.ColladaLoader();
     loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/meshedit/teapot.dae', (gltf) => {
       var root = gltf.scene;
-      var cup = root.getObjectByName('Scene');
+	  var cup = root.getObjectByName('Scene');
+	  cup = false;
       if (cup) {
         var queue = [cup];
         while (queue.length > 0) {
@@ -256,8 +264,6 @@ cubeLines.visible = false;
 octLines.visible = false;
 
 var wavyStroke = [];
-var resolution = 100;
-var unitLength = 100;
 for (var i = 0; i < resolution; i++) {
 	wavyStroke.push(new THREE.Vector2(i * unitLength / resolution, 3 * Math.sin(2 * Math.PI * (i / (0.2 * resolution)))));
 }
@@ -285,6 +291,8 @@ for (var j = 0; j < 10; j++) {
 	var v = new THREE.Vector2(j * unitLength / 10, 0);
 	straightStroke.push(v);
 }
+
+stroke_input = lowWavyStroke;
 
 function render2DLines(lines) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -344,11 +352,11 @@ function animate() {
 
 	var lines = [];
 
-	lines.push(...getSilhouetteLines(cubeSilhouettes, cube, boxHalfedgeGeometry.edges, lowWavyStroke, outputBuffer));
-	lines.push(...getSilhouetteLines(octSilhouettes, octohedron, octohedronHalfedgeGeometry.edges, lowWavyStroke, outputBuffer));
+	lines.push(...getSilhouetteLines(cubeSilhouettes, cube, boxHalfedgeGeometry.edges, stroke_input, outputBuffer));
+	lines.push(...getSilhouetteLines(octSilhouettes, octohedron, octohedronHalfedgeGeometry.edges, stroke_input, outputBuffer));
 
-	lines.push(...getCreaseLines(cubeCreases, cubeSilhouettes, cube, lowWavyStroke, outputBuffer));
-	lines.push(...getCreaseLines(octCreases, octSilhouettes, octohedron, lowWavyStroke, outputBuffer));
+	lines.push(...getCreaseLines(cubeCreases, cubeSilhouettes, cube, stroke_input, outputBuffer));
+	lines.push(...getCreaseLines(octCreases, octSilhouettes, octohedron, stroke_input, outputBuffer));
 
 	if (cupHE != undefined && cupMesh != undefined) {
 		lines.push(...getSilhouetteLines(cupSilhouettes, cupMesh, cupHE.edges, randomStroke, outputBuffer));

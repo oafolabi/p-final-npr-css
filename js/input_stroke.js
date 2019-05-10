@@ -1,17 +1,26 @@
+var gui_size = 300;
+
+var resolution = gui_size;
+var unitLength = gui_size;
+
 //
 // setup canvas
-var input_canvas = document.createElement('canvas');
-input_canvas.width = window.innerWidth;
-input_canvas.height = window.innerHeight;
+input_width = resolution;
+input_height = window.innerHeight;
+var input_canvas = document.getElementById('input_canvas');
+input_canvas.width = input_width;
+input_canvas.height = input_height;
 var input_ctx = input_canvas.getContext("2d");
 var bounds = input_canvas.getBoundingClientRect();
-input_canvas.style = "pointer-events: none; z-index:11"
+input_canvas.style = "right: 0; display:block; z-index:11; box-shadow: 0px 0px 10px grey;"
+input_canvas.style.width = input_width.toString() + "px";
+input_canvas.style.height = input_height.toString() + "px";
 document.body.appendChild(input_canvas);
 // end setup canvas
 //
 
 // reference base path is in the middle of the screen
-var basePathY = Math.floor(window.innerHeight / 2);
+var basePathY = Math.floor(bounds.height / 2);
 
 // array holds a single stroke instance
 // order acts as time
@@ -28,8 +37,9 @@ var mouseDown = false;
 var prevVertex = {x: -1, y: -1};
 
 function recordVertex(event) {
-    var offset = event.clientY - basePathY;
-    var basePathX = event.clientX;
+    console.log(event);
+    var offset = event.layerY - basePathY;
+    var basePathX = event.layerX;
     var vertex = [basePathX, offset];
     try {
         path[pathIndex].push(vertex);
@@ -39,22 +49,27 @@ function recordVertex(event) {
     }
     stroke.push(new THREE.Vector2(basePathX, offset));
     mouseDown = true;
-    canvasX = event.clientX - bounds.left - scrollX;
-    canvasY = event.clientY - bounds.top - scrollY;
-    requestAnimationFrame(addLineSegment({x: canvasX, y: canvasY}));
+    canvasX = event.layerX;
+    canvasY = event.layerY;
+    addLineSegment({x: canvasX, y: canvasY}, 5);
 }
 
-function addLineSegment(nextVertex) {
+function addLineSegment(nextVertex, lineWidth) {
     if (prevVertex.x != -1) {
         console.log("draw")
-        input_ctx.lineWidth = 5;
-        input_ctx.beginPath();
-        input_ctx.moveTo(prevVertex.x, prevVertex.y);
-        input_ctx.lineTo(nextVertex.x, nextVertex.y);
-        input_ctx.stroke();
+        console.log(nextVertex);
+        drawLine(prevVertex, nextVertex, lineWidth)
     }
     prevVertex = nextVertex;
     stroke_input = stroke;
+}
+
+function drawLine(from, to, lineWidth) {
+    input_ctx.lineWidth = lineWidth;
+    input_ctx.beginPath();
+    input_ctx.moveTo(from.x, from.y);
+    input_ctx.lineTo(to.x, to.y);
+    input_ctx.stroke();
 }
 
 function addPath() {
@@ -63,10 +78,16 @@ function addPath() {
     pathIndex += 1;
 }
 
-document.onmousedown = recordVertex;
-document.onmousemove = function(event) {
+input_canvas.onmousedown = recordVertex;
+input_canvas.onmousemove = function(event) {
     if (mouseDown) {
         recordVertex(event);
     }
 };
-document.onmouseup = addPath;
+input_canvas.onmouseup = addPath;
+
+input_ctx.setLineDash([4, 2]);
+input_ctx.strokeStyle = "grey";
+drawLine({x: window.innerWidth - bounds.width, y: basePathY}, {x: window.innerWidth, y: basePathY});
+input_ctx.setLineDash([]);
+input_ctx.strokeStyle = "black";
