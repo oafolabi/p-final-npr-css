@@ -58,6 +58,7 @@ function addLineSegment(nextVertex) {
 
 function addPath() {
     mouseDown = false;
+    prevVertex.x = -1;
     pathIndex += 1;
 }
 
