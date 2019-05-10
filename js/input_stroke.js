@@ -1,12 +1,12 @@
 //
 // setup canvas
-var canvas = document.createElement('canvas');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-var ctx = canvas.getContext("2d");
-var bounds = canvas.getBoundingClientRect();
-canvas.style = "pointer-events: none; z-index:10"
-document.body.appendChild(canvas);
+var input_canvas = document.createElement('canvas');
+input_canvas.width = window.innerWidth;
+input_canvas.height = window.innerHeight;
+var input_ctx = input_canvas.getContext("2d");
+var bounds = input_canvas.getBoundingClientRect();
+input_canvas.style = "pointer-events: none; z-index:11"
+document.body.appendChild(input_canvas);
 // end setup canvas
 //
 
@@ -47,11 +47,11 @@ function recordVertex(event) {
 function addLineSegment(nextVertex) {
     if (prevVertex.x != -1) {
         console.log("draw")
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(prevVertex.x, prevVertex.y);
-        ctx.lineTo(nextVertex.x, nextVertex.y);
-        ctx.stroke();
+        input_ctx.lineWidth = 5;
+        input_ctx.beginPath();
+        input_ctx.moveTo(prevVertex.x, prevVertex.y);
+        input_ctx.lineTo(nextVertex.x, nextVertex.y);
+        input_ctx.stroke();
     }
     prevVertex = nextVertex;
 }
