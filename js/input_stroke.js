@@ -114,6 +114,8 @@ input_canvas.onmousemove = function(event) {
     }
 };
 input_canvas.onmouseup = addPath;
+var mouseX = 0;
+var mouseY = 0;
 document.addEventListener('mousemove', function(e) {
     var rect = input_canvas.getBoundingClientRect();
     mouseX = e.clientX - rect.left;
@@ -141,7 +143,7 @@ function animateInput() {
         }
     }
     input_ctx.stroke();
-    if (mouseX > 0) {
+    if (mouseX > 0 && mouseDown) {
         input_ctx.beginPath();
         input_ctx.moveTo(point.x + startX, point.y + basePathY);
         down = true;
