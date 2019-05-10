@@ -163,15 +163,19 @@ function getSilhouettes(camera, mesh, edges) {
 	var edgelist = [];
 	for (var i = 0; i < edges.length; i++) {
 		var edge = edges[i];
-		var v = mesh.geometry.vertices[edge.halfedge.vertex.idx].clone().applyMatrix4(mesh.modelViewMatrix);
-		var cameraDir = cameraPos.clone().sub(v);
-		var f1 = faces[edge.halfedge.face.idx];
-		var f2 = faces[edge.halfedge.twin.face.idx];
-		var n1 = f1.normal.clone().applyMatrix3(mesh.normalMatrix);
-		var n2 = f2.normal.clone().applyMatrix3(mesh.normalMatrix);
-		var d1 = n1.dot(cameraDir);
-		var d2 = n2.dot(cameraDir);
-		edge.sil = d1 * d2 <= 0.00002;
+		if (edge.halfedge.face == undefined || edge.halfedge.twin.face == undefined) {
+			edge.sil = true;
+		} else {
+			var v = mesh.geometry.vertices[edge.halfedge.vertex.idx].clone().applyMatrix4(mesh.modelViewMatrix);
+			var cameraDir = cameraPos.clone().sub(v);
+			var f1 = faces[edge.halfedge.face.idx];
+			var f2 = faces[edge.halfedge.twin.face.idx];
+			var n1 = f1.normal.clone().applyMatrix3(mesh.normalMatrix);
+			var n2 = f2.normal.clone().applyMatrix3(mesh.normalMatrix);
+			var d1 = n1.dot(cameraDir);
+			var d2 = n2.dot(cameraDir);
+			edge.sil = d1 * d2 <= 0.00002;
+		}
 		if (edge.sil) {
 			if (sEdges[edge.halfedge.vertex.idx] == undefined) {
 				sEdges[edge.halfedge.vertex.idx] = [];
@@ -186,22 +190,24 @@ function getSilhouettes(camera, mesh, edges) {
 	}
 	
 
-	var findCycle = function(graph, start, prev, v, visited) {
+	var dfs = function(graph, start, prev, v, visited) {
 		var neighbors = graph[v];
-		visited.add(v);
 		// var candidates = [];
 		if (neighbors != undefined) {
 			for (var i = 0; i < neighbors.length; i++) {
-				if (neighbors[i] != prev && neighbors[i] == start) {
-					return [neighbors[i]];
-				}
-				if (neighbors[i] != prev && !visited.has(neighbors[i])) {
-					var res = findCycle(graph, start, v, neighbors[i], visited);
+				// if (neighbors[i] != prev && neighbors[i] == start) {
+				// 	return [neighbors[i]];
+				// }
+				if (neighbors[i] != prev && !visited.has([neighbors[i], v].join())) {
+					visited.add([v, neighbors[i]].join());
+					visited.add([neighbors[i], v].join());
+					var res = dfs(graph, start, v, neighbors[i], visited);
 					if (res != undefined) {
 						return [neighbors[i]].concat(res);
 					}
 				}
 			}
+			return [];
 		}
 		return undefined;
 	}
@@ -212,16 +218,22 @@ function getSilhouettes(camera, mesh, edges) {
 	do {
 		var start = 0;
 		for (var key in sEdges) {
-			if (!visited.has(parseInt(key))) {
-				start = parseInt(key);
-				break;
+			var k = parseInt(key);
+			var neighbors = sEdges[k];
+			if (neighbors != undefined) {
+				for (var i = 0; i < neighbors.length; i++) {
+					if (!visited.has([k, neighbors[i]].join())) {
+						start = k;
+						break;
+					}
+				}
 			}
 		}
-		nextCycle = findCycle(sEdges, start, start, start, visited);
-		if (nextCycle != undefined) {
-			silhouettes.push(nextCycle);
+		nextCycle = dfs(sEdges, start, start, start, visited);
+		if (nextCycle != undefined && nextCycle.length != 0) {
+			silhouettes.push([start].concat(nextCycle));
 		}
-	} while (nextCycle != undefined);
+	} while (nextCycle != undefined && nextCycle.length != 0);
 	return silhouettes;
 }
 
@@ -231,6 +243,9 @@ function getCreases(mesh, edges) {
 	var creases = [];
 	for (var i = 0; i < edges.length; i++) {
 		var edge = edges[i];
+		if (edge.halfedge.face == undefined || edge.halfedge.twin.face == undefined) {
+			continue;
+		}
 		var f1 = faces[edge.halfedge.face.idx];
 		var f2 = faces[edge.halfedge.twin.face.idx];
 		var d = f1.normal.clone().dot(f2.normal);

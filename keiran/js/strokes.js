@@ -18,14 +18,59 @@ var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.update();
 
 var boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-// boxGeometry = new THREE.TorusGeometry(0.6, 0.3, 8, 12);
+boxGeometry = new THREE.TorusGeometry(0.6, 0.3, 8, 12);
 var octohedronGeometry = new THREE.OctahedronGeometry();
+var cupHE;
+var cupMesh;
+var cupWireframe;
+var cupLines;
+var cupCreases;
+
+{
+    const loader = new THREE.ColladaLoader();
+    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/meshedit/teapot.dae', (gltf) => {
+      var root = gltf.scene;
+      var cup = root.getObjectByName('Scene');
+      if (cup) {
+        var queue = [cup];
+        while (queue.length > 0) {
+            var element = queue[0];
+            if (element instanceof THREE.Mesh) {
+              var ge = new THREE.Geometry().fromBufferGeometry( element.geometry );
+              var me = new THREE.Mesh( ge, redMaterial);
+              cupMesh = me;
+              scene.add(me);
+              // cupMesh.push(me);
+
+              var he = convertToHalfEdge(ge);
+              cupHE = he;
+              // cupHE.push(he);
+              // addSillhouetteStrokes(he, ge, me);
+              me.position.set(4, 0, 0);
+			  createEdgeDetectionMesh(me, he.edges);
+			  cupWireframe = new THREE.WireframeGeometry(ge);
+			  cupLines = new THREE.LineSegments(cupWireframe);
+			  cupLines.position.set(4, 0, 0);
+			  scene.add(cupLines);
+			  cupLines.visible = false;
+			  cupCreases = getCreases(me, he.edges);
+
+            }
+            for (const e of element.children) {
+                queue.push(e);
+            }
+            queue.shift();
+        }
+    }}, undefined, undefined);
+}
 
 var greenMaterial = new THREE.MeshToonMaterial({color: 0x00ff00, shininess: 5});
 var blueMaterial = new THREE.MeshToonMaterial({color: 0x0000ff, shininess: 5});
+var redMaterial = new THREE.MeshToonMaterial({color: 0xff0000, shininess: 5});
 var whiteMaterial = new THREE.MeshBasicMaterial({color: 0xffffff});
-var cube = new THREE.Mesh(boxGeometry, whiteMaterial);
-var octohedron = new THREE.Mesh(octohedronGeometry, whiteMaterial);
+var cube = new THREE.Mesh(boxGeometry, greenMaterial);
+var octohedron = new THREE.Mesh(octohedronGeometry, blueMaterial);
+
 scene.add(cube);
 scene.add(octohedron);
 
@@ -52,12 +97,18 @@ function getRandomColor() {
 var usedEdgeID = new Set();
 
 function createEdgeDetectionMesh(mesh, edges) {
+	mesh.geometry.computeVertexNormals();
 	for (var i = 0; i < edges.length; i++) {
 		var edge = edges[i];
 		var v1 = mesh.geometry.vertices[edge.halfedge.vertex.idx];
+		var f1 = mesh.geometry.faces[edge.halfedge.face.idx];
+		var n1 = f1.normal;
 		var v2 = mesh.geometry.vertices[edge.halfedge.twin.vertex.idx];
+		var f2 = mesh.geometry.faces[edge.halfedge.twin.face.idx];
+		var n2 = f2.normal;
+		var n = n1.add(n2).normalize();
 		var g = new THREE.Geometry();
-		g.vertices = [v1, v2];
+		g.vertices = [v1.clone().addScaledVector(n, 0.01), v2.clone().addScaledVector(n, 0.01)];
 		var color = 0x000000;
 		do {
 			color = getRandomColor();
@@ -65,7 +116,7 @@ function createEdgeDetectionMesh(mesh, edges) {
 		edge.id = color;
 		var material = new MeshLineMaterial({
 			color: color,
-			lineWidth: 10,
+			lineWidth: 5,
 			sizeAttenuation: false,
 			resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
 			near: camera.near,
@@ -74,6 +125,8 @@ function createEdgeDetectionMesh(mesh, edges) {
 		var line = new MeshLine();
 		line.setGeometry(g);
 		var m = new THREE.Mesh(line.geometry, material);
+		
+		// var m = new THREE.Line(g, new THREE.LineBasicMaterial({color: color}));
 		m.position.copy(mesh.position);
 		scene.add(m);
 		edge.line = m;
@@ -103,7 +156,7 @@ function getSilhouetteLines(silhouettes, mesh, edges, stroke, buffer) {
 	for (var j = 0; j < silhouettes.length; j++) {
 		var vertices = silhouettes[j];
 		var waypoints = [];
-		vertices.push(vertices[0]);
+		// vertices.push(vertices[0]);
 		for (var i = 0; i < vertices.length; i++) {
 			waypoints.push(mesh.geometry.vertices[vertices[i]]);
 		}
@@ -263,11 +316,18 @@ function animate() {
 
 	var cubeSilhouettes = getSilhouettes(camera, cube, boxHalfedgeGeometry.edges);
 	var octSilhouettes = getSilhouettes(camera, octohedron, octohedronHalfedgeGeometry.edges);
+	if (cupHE != undefined) {
+		var cupSilhouettes = getSilhouettes(camera, cupMesh, cupHE.edges);
+	}
 
 	controls.update();
 
 	setEdgeIDEnabled(boxHalfedgeGeometry.edges, true);
 	setEdgeIDEnabled(octohedronHalfedgeGeometry.edges, true);
+	if (cupHE != undefined) {
+		setEdgeIDEnabled(cupHE.edges, true);
+	}
+
 	renderer.setRenderTarget(renderTarget);
 	renderer.render(scene, camera);
 	var outputBuffer = new Uint8Array(window.innerWidth * window.innerHeight * 4);
@@ -275,16 +335,25 @@ function animate() {
 
 	setEdgeIDEnabled(boxHalfedgeGeometry.edges, false);
 	setEdgeIDEnabled(octohedronHalfedgeGeometry.edges, false);
+	if (cupHE != undefined) {
+		setEdgeIDEnabled(cupHE.edges, false);
+	}
+
 	renderer.setRenderTarget(null);
 	renderer.render(scene, camera);
 
 	var lines = [];
 
-	lines.push(...getSilhouetteLines(cubeSilhouettes, cube, boxHalfedgeGeometry.edges, randomStroke, outputBuffer));
-	lines.push(...getSilhouetteLines(octSilhouettes, octohedron, octohedronHalfedgeGeometry.edges, randomStroke, outputBuffer));
+	lines.push(...getSilhouetteLines(cubeSilhouettes, cube, boxHalfedgeGeometry.edges, lowWavyStroke, outputBuffer));
+	lines.push(...getSilhouetteLines(octSilhouettes, octohedron, octohedronHalfedgeGeometry.edges, lowWavyStroke, outputBuffer));
 
-	lines.push(...getCreaseLines(cubeCreases, cubeSilhouettes, cube, randomStroke, outputBuffer));
-	lines.push(...getCreaseLines(octCreases, octSilhouettes, octohedron, randomStroke, outputBuffer));
+	lines.push(...getCreaseLines(cubeCreases, cubeSilhouettes, cube, lowWavyStroke, outputBuffer));
+	lines.push(...getCreaseLines(octCreases, octSilhouettes, octohedron, lowWavyStroke, outputBuffer));
+
+	if (cupHE != undefined && cupMesh != undefined) {
+		lines.push(...getSilhouetteLines(cupSilhouettes, cupMesh, cupHE.edges, randomStroke, outputBuffer));
+		lines.push(...getCreaseLines(cupCreases, cupSilhouettes, cupMesh, randomStroke, outputBuffer));
+	}
 
 	render2DLines(lines);
 }
