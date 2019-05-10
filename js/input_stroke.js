@@ -1,34 +1,31 @@
 //
-// setup threejs canvas
-var scene = new THREE.Scene();
-var renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
-var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+// setup canvas
 var canvas = document.createElement('canvas');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 var ctx = canvas.getContext("2d");
-
+var bounds = canvas.getBoundingClientRect();
 canvas.style = "pointer-events: none; z-index:10"
-
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0xffffff);
-document.body.appendChild(renderer.domElement);
 document.body.appendChild(canvas);
-// end setup threejs canvas
+// end setup canvas
 //
 
 // reference base path is in the middle of the screen
 var basePathY = Math.floor(window.innerHeight / 2);
+
 // array holds a single stroke instance
 // order acts as time
 // !!deprecated
 // var stroke = [];
+
 // path holds multiple separate strokes
 var path = [];
 var pathIndex = 0;
+
 // sets whether mouse has been pressed
 var mouseDown = false;
+
+var prevVertex = {x: -1, y: -1};
 
 //offsets are stored as floats with a range of 0.0-1.0
 function recordVertex(event) {
@@ -42,6 +39,21 @@ function recordVertex(event) {
         path.push([vertex]);
     }
     mouseDown = true;
+    canvasX = event.clientX - bounds.left - scrollX;
+    canvasY = event.clientY - bounds.top - scrollY;
+    addLineSegment({x: canvasX, y: canvasY});
+}
+
+function addLineSegment(nextVertex) {
+    if (prevVertex.x != -1) {
+        console.log("draw")
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(prevVertex.x, prevVertex.y);
+        ctx.lineTo(nextVertex.x, nextVertex.y);
+        ctx.stroke();
+    }
+    prevVertex = nextVertex;
 }
 
 function addPath() {
