@@ -95,11 +95,11 @@ var cupCreases;
               var he = convertToHalfEdge(ge);
               cupHE = he;
               // addSillhouetteStrokes(he, ge, me);
-              me.position.set(-2, 0, 0);
+              me.position.set(-2, -1, 0);
 			  createEdgeDetectionMesh(me, he.edges);
 			  cupWireframe = new THREE.WireframeGeometry(ge);
 			  cupLines = new THREE.LineSegments(cupWireframe);
-			  cupLines.position.set(-2, 0, 0);
+			  cupLines.position.set(-2, -1, 0);
 			  scene.add(cupLines);
 			  cupLines.visible = false;
 			  cupCreases = getCreases(me, he.edges);
@@ -216,8 +216,12 @@ function getSilhouetteLines(silhouettes, mesh, edges, stroke, buffer) {
 			waypoints[i] = new THREE.Vector2(waypoints[i].x, waypoints[i].y);
 		}
 
-		// Randomly select stroke style for line
-		// stroke = stroke[Math.floor(Math.random() * stroke_size)];
+		if (stroke.length == 0) {
+			stroke = lowWavyStroke;
+		} else {
+			// Randomly select stroke style for line
+			stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;
+		}
 		var v = waypointsToStylized(stroke, waypoints);
 		for (var i = 0; i < v.length; i++) {
 
@@ -256,6 +260,12 @@ function getCreaseLines(creases, silhouettes, mesh, stroke, buffer) {
 				waypoints[j] = new THREE.Vector2(waypoints[j].x, waypoints[j].y);
 			}
 
+			if (stroke.length == 0) {
+				stroke = lowWavyStroke;
+			} else {
+				// Randomly select stroke style for line
+				stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;
+			}
 			var v = waypointsToStylized(stroke, waypoints);
 			for (var j = 0; j < v.length; j++) {
 				v[j].visible = checkVisibility(v[j].reference, edge.id, buffer);

@@ -246,16 +246,18 @@ document.onkeydown = function(event) {
             break;
         // switch between fox and cube
         case 'c':
-            if (isCube) {
-                obj = cupMesh;
-                objCreases = cupCreases;
-                objHE = cupHE;
-            } else {
-                obj = cube;
-                objCreases = cubeCreases;
-                objHE = cubeHE;
+        	if (cupHE != undefined && cupMesh != undefined) {
+                if (isCube) {
+                    obj = cupMesh;
+                    objCreases = cupCreases;
+                    objHE = cupHE;
+                } else {
+                    obj = cube;
+                    objCreases = cubeCreases;
+                    objHE = cubeHE;
+                }
+                isCube = !isCube;
             }
-            isCube = !isCube;
             break;
         // increase brush width
         case '=':
