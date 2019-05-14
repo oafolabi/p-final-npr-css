@@ -11,6 +11,7 @@ var context_array = [];
 var input_ctx;
 var bounds;
 var canvas_sep = 5;
+var shuffle = 0;
 
 class CanvasBlock {
     constructor(input_width, input_height, parent) {
@@ -153,7 +154,7 @@ class CanvasBlock {
         }
         if (this.stroke.length > 0) {
             this.stroke.pop();
-            this.stroke_input.pop();
+            stroke_input.pop();
             this.rerender();
             this.prevVertex = this.strokeHistory.pop();
             this.thicknessOrder.pop();
@@ -240,4 +241,11 @@ document.onkeydown = function(event) {
     canvas_array.forEach(function(element) {
         element.gui_action(event);
     });
+    switch(event.key) {
+        // shuffle between the shown stroke
+        case 's':
+        shuffle += 1;
+        stroke_input = canvas_array[shuffle % canvas_array.length].stroke;
+        break;
+    }
 };
