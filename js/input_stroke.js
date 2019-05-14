@@ -7,12 +7,13 @@ var input_canvas;
 var input_ctx;
 var bounds;
 
+var input_array = []
 //
 // setup canvas
 function setup_canvas() {
     input_width = resolution;
     input_height = 100;
-    input_canvas = document.getElementById('input_canvas');
+    input_canvas = document.getElementById('input_canvas1');
     input_canvas.width = input_width;
     input_canvas.height = input_height;
     input_ctx = input_canvas.getContext("2d");
@@ -20,6 +21,24 @@ function setup_canvas() {
     input_canvas.style = "right: 0; display:block; z-index:11; box-shadow: 0px 0px 10px grey;"
     input_canvas.style.width = input_width.toString() + "px";
     input_canvas.style.height = input_height.toString() + "px";
+    input_array.push(input_canvas)
+}
+function new_input() {
+    input_width = resolution;
+    input_height = 100;
+    above_canvas = document.getElementById('input_canvas' + (input_array.length).toString());
+
+    input_canvas = document.createElement("CANVAS");
+    input_canvas.id = 'input_canvas' + (input_array.length + 1).toString();
+    input_canvas.width = input_width;
+    input_canvas.height = input_height;
+    input_ctx = input_canvas.getContext("2d");
+    bounds = input_canvas.getBoundingClientRect();
+    input_canvas.style = "right: 0; display:block; z-index:11; box-shadow: 0px 0px 10px grey;";
+    input_canvas.style.top = above_canvas.getBoundingClientRect().bottom.toString() + "px";
+    input_canvas.style.width = input_width.toString() + "px";
+    input_canvas.style.height = input_height.toString() + "px";
+    input_array.push(input_canvas)
 }
 setup_canvas();
 // end setup canvas
@@ -195,3 +214,4 @@ input_canvas.onmousemove = function(event) {
 };
 input_canvas.onmouseup = addPath;
 document.onkeydown = gui_action;
+new_input()
