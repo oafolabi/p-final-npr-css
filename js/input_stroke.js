@@ -1,4 +1,4 @@
-var gui_size = 100;
+var gui_size = 400;
 
 var resolution = gui_size;
 var unitLength = gui_size;
@@ -20,7 +20,6 @@ function setup_canvas() {
     input_canvas.style = "right: 0; display:block; z-index:11; box-shadow: 0px 0px 10px grey;"
     input_canvas.style.width = input_width.toString() + "px";
     input_canvas.style.height = input_height.toString() + "px";
-    document.body.appendChild(input_canvas);
 }
 setup_canvas();
 // end setup canvas
@@ -128,7 +127,10 @@ function spawn_gui() {
     input_canvas.height = input_height;
     input_canvas.style.width = input_width.toString() + "px";
     input_canvas.style.height = input_height.toString() + "px";
-    document.body.appendChild(input_canvas);
+    input_ctx.font = "800px Arial";
+    input_ctx.fillStyle = "black";
+    input_ctx.fillText("HELLO WORLD", 10, 100);
+    console.log(input_ctx.fillStyle);
     input_ctx.setLineDash([4, 2]);
     input_ctx.strokeStyle = "grey";
     drawLine({x: window.innerWidth - bounds.width, y: basePathY}, {x: window.innerWidth, y: basePathY}, 1);
