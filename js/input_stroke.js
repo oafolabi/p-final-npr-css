@@ -241,6 +241,7 @@ document.onkeydown = function(event) {
     switch(event.key) {
         // shuffle between the shown stroke
         case 's':
+            seed = (seed + 1) % 100;
             shuffle += 1;
             stroke_input = canvas_array[shuffle % canvas_array.length].stroke;
             break;
