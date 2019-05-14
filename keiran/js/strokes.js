@@ -77,30 +77,29 @@ var cupCreases;
 
 {
     const loader = new THREE.OBJLoader();
-    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/meshedit/fox.obj', (gltf) => {
-      var root = gltf.scene;
-	  var cup = root.getObjectByName('Scene');
-	  cup = false;
+    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/ucbugg_fox.obj', (gltf) => {
+      var root = gltf;
+	  var cup = root.getObjectByName('fox:fox_mesh');
+	//   cup = false;
       if (cup) {
         var queue = [cup];
         while (queue.length > 0) {
             var element = queue[0];
             if (element instanceof THREE.Mesh) {
-              var ge = new THREE.Geometry().fromBufferGeometry( element.geometry );
+			  var ge = new THREE.Geometry().fromBufferGeometry( element.geometry );
+			  ge.scale(0.2, 0.2, 0.2);
               var me = new THREE.Mesh( ge, redMaterial);
               cupMesh = me;
               scene.add(me);
-              // cupMesh.push(me);
 
               var he = convertToHalfEdge(ge);
               cupHE = he;
-              // cupHE.push(he);
               // addSillhouetteStrokes(he, ge, me);
-              me.position.set(4, 0, 0);
+              me.position.set(-2, 0, 0);
 			  createEdgeDetectionMesh(me, he.edges);
 			  cupWireframe = new THREE.WireframeGeometry(ge);
 			  cupLines = new THREE.LineSegments(cupWireframe);
-			  cupLines.position.set(4, 0, 0);
+			  cupLines.position.set(-2, 0, 0);
 			  scene.add(cupLines);
 			  cupLines.visible = false;
 			  cupCreases = getCreases(me, he.edges);
@@ -363,19 +362,24 @@ function render2DLines(lines) {
 var cubeCreases = getCreases(cube, boxHalfedgeGeometry.edges);
 var octCreases = getCreases(octohedron, octohedronHalfedgeGeometry.edges);
 
+var objCreases = cubeCreases;
+var obj = cube;
+var cubeHE = boxHalfedgeGeometry.edges;
+var objHE = cubeHE;
+
 function animate() {
 
 	requestAnimationFrame(animate);
 
-	var cubeSilhouettes = getSilhouettes(camera, cube, boxHalfedgeGeometry.edges);
+	var objSilhouettes = getSilhouettes(camera, obj, objHE);
 	var octSilhouettes = getSilhouettes(camera, octohedron, octohedronHalfedgeGeometry.edges);
-	if (cupHE != undefined) {
-		var cupSilhouettes = getSilhouettes(camera, cupMesh, cupHE.edges);
-	}
+	// if (cupHE != undefined) {
+	// 	var cupSilhouettes = getSilhouettes(camera, cupMesh, cupHE.edges);
+	// }
 
 	controls.update();
 
-	setEdgeIDEnabled(boxHalfedgeGeometry.edges, true);
+	setEdgeIDEnabled(objHE, true);
 	setEdgeIDEnabled(octohedronHalfedgeGeometry.edges, true);
 	if (cupHE != undefined) {
 		setEdgeIDEnabled(cupHE.edges, true);
@@ -386,7 +390,7 @@ function animate() {
 	var outputBuffer = new Uint8Array(window.innerWidth * window.innerHeight * 4);
 	renderer.readRenderTargetPixels(renderTarget, 0, 0, window.innerWidth, window.innerHeight, outputBuffer);
 
-	setEdgeIDEnabled(boxHalfedgeGeometry.edges, false);
+	setEdgeIDEnabled(objHE, false);
 	setEdgeIDEnabled(octohedronHalfedgeGeometry.edges, false);
 	if (cupHE != undefined) {
 		setEdgeIDEnabled(cupHE.edges, false);
@@ -397,16 +401,16 @@ function animate() {
 
 	var lines = [];
 
-	lines.push(...getSilhouetteLines(cubeSilhouettes, cube, boxHalfedgeGeometry.edges, stroke_input, outputBuffer));
+	lines.push(...getSilhouetteLines(objSilhouettes, obj, objHE, stroke_input, outputBuffer));
 	lines.push(...getSilhouetteLines(octSilhouettes, octohedron, octohedronHalfedgeGeometry.edges, stroke_input, outputBuffer));
 
-	lines.push(...getCreaseLines(cubeCreases, cubeSilhouettes, cube, stroke_input, outputBuffer));
+	lines.push(...getCreaseLines(objCreases, objSilhouettes, obj, stroke_input, outputBuffer));
 	lines.push(...getCreaseLines(octCreases, octSilhouettes, octohedron, stroke_input, outputBuffer));
 
-	if (cupHE != undefined && cupMesh != undefined) {
-		lines.push(...getSilhouetteLines(cupSilhouettes, cupMesh, cupHE.edges, randomStroke, outputBuffer));
-		lines.push(...getCreaseLines(cupCreases, cupSilhouettes, cupMesh, randomStroke, outputBuffer));
-	}
+	// if (cupHE != undefined && cupMesh != undefined) {
+	// 	lines.push(...getSilhouetteLines(cupSilhouettes, cupMesh, cupHE.edges, randomStroke, outputBuffer));
+	// 	lines.push(...getCreaseLines(cupCreases, cupSilhouettes, cupMesh, randomStroke, outputBuffer));
+	// }
 
 	render2DLines(lines);
 }

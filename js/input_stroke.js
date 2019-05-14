@@ -12,6 +12,7 @@ var input_ctx;
 var bounds;
 var canvas_sep = 5;
 var shuffle = 0;
+var isCube = true;
 
 class CanvasBlock {
     constructor(input_width, input_height, parent) {
@@ -113,6 +114,7 @@ class CanvasBlock {
     }
 
     rerender() {
+        this.spawn_gui();
         for (var i = 1; i < this.strokeHistory.length - 1; i += 1) {
             this.drawLine(this.strokeHistory[i], this.strokeHistory[i+1], user_lineWidth);
         }
@@ -136,13 +138,13 @@ class CanvasBlock {
         this.input_ctx.setLineDash([4, 2]);
         this.input_ctx.strokeStyle = "grey";
         console.log(this.basePathY);
-        this.drawLine({x: 0, y: this.basePathY}, {x: this.bounds.width, y: this.basePathY}, 1);
+        this.drawLine({x: 0, y: this.basePathY}, {x: window.innerWidth, y: this.basePathY}, 1);
         this.input_ctx.setLineDash([]);
         this.input_ctx.strokeStyle = "black";
     }
     
     undo_action() {
-        spawn_gui();
+        this.spawn_gui();
         if (this.path.length < this.pathIndex + 1) {
             this.pathIndex -= 1;
         }
@@ -176,11 +178,11 @@ class CanvasBlock {
                 break;
             // increase brush width
             case '=':
-                user_lineWidth += 1;
+                this.rerender();
                 break;
             // decrease brush width
             case '-':
-                user_lineWidth -= 1;
+                this.rerender();
                 break;
             // undo
             case 'z':
@@ -188,13 +190,11 @@ class CanvasBlock {
                 break;
             // increase gui size
             case ']':
-                gui_size += 100;
-                reset();
+                this.reset();
                 break;
             // decrease gui size
             case '[':
-                gui_size -= 100;
-                reset();
+                this.reset();
                 break;
         }
     }
@@ -238,14 +238,43 @@ for (var i = 0; i < total_strokes; i += 1) {
 
 // global key commands
 document.onkeydown = function(event) {
-    canvas_array.forEach(function(element) {
-        element.gui_action(event);
-    });
     switch(event.key) {
         // shuffle between the shown stroke
         case 's':
-        shuffle += 1;
-        stroke_input = canvas_array[shuffle % canvas_array.length].stroke;
-        break;
+            shuffle += 1;
+            stroke_input = canvas_array[shuffle % canvas_array.length].stroke;
+            break;
+        // switch between fox and cube
+        case 'c':
+            if (isCube) {
+                obj = cupMesh;
+                objCreases = cupCreases;
+                objHE = cupHE;
+            } else {
+                obj = cube;
+                objCreases = cubeCreases;
+                objHE = cubeHE;
+            }
+            isCube = !isCube;
+            break;
+        // increase brush width
+        case '=':
+            user_lineWidth += 1;
+            break;
+        // decrease brush width
+        case '-':
+            user_lineWidth -= 1;
+            break;
+        // increase gui size
+        case ']':
+            gui_size += 100;
+            break;
+        // decrease gui size
+        case '[':
+            gui_size -= 100;
+            break;
     }
+    canvas_array.forEach(function(element) {
+        element.gui_action(event);
+    });
 };
