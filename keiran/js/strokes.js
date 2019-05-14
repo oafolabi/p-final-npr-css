@@ -77,7 +77,7 @@ var cupCreases;
 
 {
     const loader = new THREE.OBJLoader();
-    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/ucbugg_fox.obj', (gltf) => {
+    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/ucbugg_fox_lowpoly.obj', (gltf) => {
       var root = gltf;
 	  var cup = root.getObjectByName('fox:fox_mesh');
 	//   cup = false;
