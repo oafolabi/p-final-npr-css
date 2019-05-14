@@ -72,15 +72,55 @@ var cupCreases;
             }
             queue.shift();
         }
+	}}, undefined, undefined);
+}
+
+{
+    const loader = new THREE.OBJLoader();
+    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/meshedit/fox.obj', (gltf) => {
+      var root = gltf.scene;
+	  var cup = root.getObjectByName('Scene');
+	  cup = false;
+      if (cup) {
+        var queue = [cup];
+        while (queue.length > 0) {
+            var element = queue[0];
+            if (element instanceof THREE.Mesh) {
+              var ge = new THREE.Geometry().fromBufferGeometry( element.geometry );
+              var me = new THREE.Mesh( ge, redMaterial);
+              cupMesh = me;
+              scene.add(me);
+              // cupMesh.push(me);
+
+              var he = convertToHalfEdge(ge);
+              cupHE = he;
+              // cupHE.push(he);
+              // addSillhouetteStrokes(he, ge, me);
+              me.position.set(4, 0, 0);
+			  createEdgeDetectionMesh(me, he.edges);
+			  cupWireframe = new THREE.WireframeGeometry(ge);
+			  cupLines = new THREE.LineSegments(cupWireframe);
+			  cupLines.position.set(4, 0, 0);
+			  scene.add(cupLines);
+			  cupLines.visible = false;
+			  cupCreases = getCreases(me, he.edges);
+
+            }
+            for (const e of element.children) {
+                queue.push(e);
+            }
+            queue.shift();
+        }
     }}, undefined, undefined);
 }
+
 
 var greenMaterial = new THREE.MeshToonMaterial({color: 0x00ff00, shininess: 5});
 var blueMaterial = new THREE.MeshToonMaterial({color: 0x0000ff, shininess: 5});
 var redMaterial = new THREE.MeshToonMaterial({color: 0xff0000, shininess: 5});
 var whiteMaterial = new THREE.MeshBasicMaterial({color: 0xffffff});
-var cube = new THREE.Mesh(boxGeometry, whiteMaterial);
-var octohedron = new THREE.Mesh(octohedronGeometry, whiteMaterial);
+var cube = new THREE.Mesh(boxGeometry, greenMaterial);
+var octohedron = new THREE.Mesh(octohedronGeometry, blueMaterial);
 
 scene.add(cube);
 scene.add(octohedron);
