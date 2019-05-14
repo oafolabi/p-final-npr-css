@@ -1,13 +1,4 @@
-// stroke init
-var stroke_input;
-var total_strokes = 3; // number of strokes specified
-var user_lineWidth = 5;
-var thicknessOrder = [];
-var seed = 0;
 
-// global stroke res controls
-var resolution = 100;
-var unitLength = 100;
 
 var scene = new THREE.Scene();
 var renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
