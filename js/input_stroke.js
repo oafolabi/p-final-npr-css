@@ -72,19 +72,21 @@ class CanvasBlock {
 
     recordVertex(event) {
         console.log(event);
-        var offset = event.layerY - this.basePathY;
-        var basePathX = event.layerX;
-        var vertex = [basePathX, offset];
-        try {
-            this.path[this.pathIndex].push(vertex);
+        if (Math.abs(this.prevVertex.y - event.layerY) > 0 && Math.abs(this.prevVertex.x - event.layerX) > 0) {
+            var offset = event.layerY - this.basePathY;
+            var basePathX = event.layerX;
+            var vertex = [basePathX, offset];
+            try {
+                this.path[this.pathIndex].push(vertex);
+            }
+            catch(err) {
+                this.path.push([vertex]);
+            }
+            this.stroke.push(new THREE.Vector2(basePathX, offset));
+            this.mouseDown = true;
+            this.thicknessOrder.push(user_lineWidth);
+            this.addLineSegment({x: event.layerX, y: event.layerY}, user_lineWidth);
         }
-        catch(err) {
-            this.path.push([vertex]);
-        }
-        this.stroke.push(new THREE.Vector2(basePathX, offset));
-        this.mouseDown = true;
-        this.thicknessOrder.push(user_lineWidth);
-        this.addLineSegment({x: event.layerX, y: event.layerY}, user_lineWidth);
     }
     
     addLineSegment(nextVertex, lineWidth) {
