@@ -204,6 +204,7 @@ function getSilhouetteLines(silhouettes, mesh, edges, stroke, buffer) {
 		edgesHash[[v2, v1].join()] = edge.id;
 	}
 	var lines = [];
+	Math.seedrandom(seed);
 	for (var j = 0; j < silhouettes.length; j++) {
 		var vertices = silhouettes[j];
 		var waypoints = [];
@@ -218,7 +219,6 @@ function getSilhouetteLines(silhouettes, mesh, edges, stroke, buffer) {
 		}
 
 		// Randomly select stroke style for line
-		Math.seedrandom(seed);
 		stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;
 		if (stroke.length == 0) {
 			stroke = lowWavyStroke;
@@ -245,6 +245,7 @@ function getCreaseLines(creases, silhouettes, mesh, stroke, buffer) {
 			silhouetteEdges.add([vertices[(j + 1)  % vertices.length], vertices[j]].join());
 		}
 	}
+	Math.seedrandom(seed);
 	for (var i = 0; i < creases.length; i++) {
 		var edge = creases[i];
 		var v1 = edge.halfedge.vertex.idx;
@@ -262,9 +263,7 @@ function getCreaseLines(creases, silhouettes, mesh, stroke, buffer) {
 			}
 
 			// Randomly select stroke style for line
-			Math.seedrandom(seed);
-			stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;
-			console.log(Math.floor(Math.random() * total_strokes));
+			stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;\
 			if (stroke.length == 0) {
 				stroke = lowWavyStroke;
 			}
