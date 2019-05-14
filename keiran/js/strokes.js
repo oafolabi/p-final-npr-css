@@ -263,7 +263,7 @@ function getCreaseLines(creases, silhouettes, mesh, stroke, buffer) {
 			}
 
 			// Randomly select stroke style for line
-			stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;\
+			stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;
 			if (stroke.length == 0) {
 				stroke = lowWavyStroke;
 			}
