@@ -21,7 +21,7 @@ function setup_canvas() {
     input_canvas.style = "right: 0; display:block; z-index:11; box-shadow: 0px 0px 10px grey;"
     input_canvas.style.width = input_width.toString() + "px";
     input_canvas.style.height = input_height.toString() + "px";
-    input_array.push(input_canvas)
+    input_array.push(input_canvas);
 }
 function new_input() {
     input_width = resolution;
@@ -35,10 +35,11 @@ function new_input() {
     input_ctx = input_canvas.getContext("2d");
     bounds = input_canvas.getBoundingClientRect();
     input_canvas.style = "right: 0; display:block; z-index:11; box-shadow: 0px 0px 10px grey;";
-    input_canvas.style.top = above_canvas.getBoundingClientRect().bottom.toString() + "px";
+    input_canvas.style.top = (5 + above_canvas.getBoundingClientRect().bottom).toString() + "px";
     input_canvas.style.width = input_width.toString() + "px";
     input_canvas.style.height = input_height.toString() + "px";
-    input_array.push(input_canvas)
+    input_array.push(input_canvas);
+    document.body.appendChild(input_canvas)
 }
 setup_canvas();
 // end setup canvas
