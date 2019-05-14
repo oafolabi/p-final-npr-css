@@ -11,7 +11,7 @@ var bounds;
 // setup canvas
 function setup_canvas() {
     input_width = resolution;
-    input_height = window.innerHeight;
+    input_height = 100;
     input_canvas = document.getElementById('input_canvas');
     input_canvas.width = input_width;
     input_canvas.height = input_height;
@@ -26,7 +26,7 @@ setup_canvas();
 //
 
 // reference base path is in the middle of the screen
-var basePathY = Math.floor(bounds.height / 2);
+var basePathY = Math.floor(input_height / 2);
 
 // array holds a single stroke instance
 // order acts as time
@@ -127,9 +127,9 @@ function spawn_gui() {
     input_canvas.height = input_height;
     input_canvas.style.width = input_width.toString() + "px";
     input_canvas.style.height = input_height.toString() + "px";
-    input_ctx.font = "800px Arial";
-    input_ctx.fillStyle = "black";
-    input_ctx.fillText("HELLO WORLD", 10, 100);
+    // input_ctx.font = "100px Arial";
+    // input_ctx.fillStyle = "black";
+    // input_ctx.fillText("HELLO WORLD", 10, 100);
     console.log(input_ctx.fillStyle);
     input_ctx.setLineDash([4, 2]);
     input_ctx.strokeStyle = "grey";
