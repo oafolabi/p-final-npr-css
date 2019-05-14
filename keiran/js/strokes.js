@@ -1,6 +1,6 @@
 // stroke init
 var stroke_input;
-var stroke_size; // number of strokes specified
+var total_strokes = 5; // number of strokes specified
 var user_lineWidth = 5;
 var thicknessOrder = [];
 
