@@ -3,6 +3,7 @@ var stroke_input;
 var total_strokes = 3; // number of strokes specified
 var user_lineWidth = 5;
 var thicknessOrder = [];
+var seed = 0;
 
 // global stroke res controls
 var resolution = 100;
@@ -216,11 +217,11 @@ function getSilhouetteLines(silhouettes, mesh, edges, stroke, buffer) {
 			waypoints[i] = new THREE.Vector2(waypoints[i].x, waypoints[i].y);
 		}
 
+		// Randomly select stroke style for line
+		Math.seedrandom(seed);
+		stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;
 		if (stroke.length == 0) {
 			stroke = lowWavyStroke;
-		} else {
-			// Randomly select stroke style for line
-			stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;
 		}
 		var v = waypointsToStylized(stroke, waypoints);
 		for (var i = 0; i < v.length; i++) {
@@ -260,11 +261,12 @@ function getCreaseLines(creases, silhouettes, mesh, stroke, buffer) {
 				waypoints[j] = new THREE.Vector2(waypoints[j].x, waypoints[j].y);
 			}
 
+			// Randomly select stroke style for line
+			Math.seedrandom(seed);
+			stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;
+			console.log(Math.floor(Math.random() * total_strokes));
 			if (stroke.length == 0) {
 				stroke = lowWavyStroke;
-			} else {
-				// Randomly select stroke style for line
-				stroke = canvas_array[Math.floor(Math.random() * total_strokes)].stroke;
 			}
 			var v = waypointsToStylized(stroke, waypoints);
 			for (var j = 0; j < v.length; j++) {
