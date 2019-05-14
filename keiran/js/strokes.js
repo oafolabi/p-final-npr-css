@@ -411,11 +411,11 @@ function animate() {
 
 	var lines = [];
 
-	lines.push(...getSilhouetteLines(objSilhouettes, obj, objHE, stroke_input, outputBuffer));
-	lines.push(...getSilhouetteLines(octSilhouettes, octohedron, octohedronHalfedgeGeometry.edges, stroke_input, outputBuffer));
+	lines.push(...getSilhouetteLines(objSilhouettes, obj, objHE, canvas_array, outputBuffer));
+	lines.push(...getSilhouetteLines(octSilhouettes, octohedron, octohedronHalfedgeGeometry.edges, canvas_array, outputBuffer));
 
-	lines.push(...getCreaseLines(objCreases, objSilhouettes, obj, stroke_input, outputBuffer));
-	lines.push(...getCreaseLines(octCreases, octSilhouettes, octohedron, stroke_input, outputBuffer));
+	lines.push(...getCreaseLines(objCreases, objSilhouettes, obj, canvas_array, outputBuffer));
+	lines.push(...getCreaseLines(octCreases, octSilhouettes, octohedron, canvas_array, outputBuffer));
 
 	// if (cupHE != undefined && cupMesh != undefined) {
 	// 	lines.push(...getSilhouetteLines(cupSilhouettes, cupMesh, cupHE.edges, randomStroke, outputBuffer));
