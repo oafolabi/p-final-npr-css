@@ -127,6 +127,7 @@ function value_iteration(D_prime) {
         if (arraysEqual(D_prime2, D_prime2_new)) {
             converged = true;
         }
+        converged = true;
         D_prime2 = D_prime2_new;
         D_prime2_new = [];
     }
@@ -207,13 +208,13 @@ function getRandomInt(min, max) {
 
 // Sample from the distribution given by [P], conditioned on row i
 function sample(i, P_mat) {
-    if (i >= P_mat.length) {
-        console.log(i);
-        console.log(P_mat.length);
-        console.log("bad news");
-    } else {
-        console.log("its ok");
-    }
+    // if (i >= P_mat.length) {
+    //     console.log(i);
+    //     console.log(P_mat.length);
+    //     console.log("bad news");
+    // } else {
+    //     console.log("its ok");
+    // }
     var row = P_mat[i];
     var CDF = [];
     var j;
@@ -226,10 +227,10 @@ function sample(i, P_mat) {
     }
     var CDFindex = 0;
     var s = Math.random();
-    while (CDF[CDFindex] < s) {
+    while (CDF[CDFindex] <= s) {
         CDFindex++;
     }
-    return CDFindex;
+    return Math.max(0, CDFindex-1);
 }
 
 // given list of canvas inputs, generate probablity matrix for synthesized strokes
@@ -241,8 +242,9 @@ function get_MRF(input) {
 function synthesize_stroke(offset_num, P_mat) {
     var prev_index = starting_indices[getRandomInt(0, starting_indices.length)];
     var gen_stroke = [offset_list[prev_index]];
-    while (offset_list.length < offset_num) {
+    while (gen_stroke.length < offset_num) {
         next_index = sample(prev_index, P_mat);
+        console.log(next_index);
         gen_stroke.push(offset_list[next_index]);
         prev_index = next_index;
     }
