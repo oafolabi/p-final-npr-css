@@ -5,7 +5,7 @@ var total_strokes = 3; // number of strokes specified
 var user_lineWidth = 5;
 var thicknessOrder = [];
 var seed = 0;
-var total_synth = 3; // total amount of strokes synthesized
+var total_synth = 1; // total amount of strokes synthesized
 
 // global stroke res controls
 var resolution = 100;
@@ -222,6 +222,17 @@ class CanvasBlock {
         this.thicknessOrder.length = 0;
         this.spawn_gui();
     }
+
+    showSynth() {
+        this.spawn_gui();
+        for (var i = 1; i < this.stroke.length - 1; i += 1) {
+            var prev = this.stroke[i];
+            var next = this.stroke[i+1];
+            prev.y = this.basePathY + prev.y;
+            next.y = this.basePathY + next.y;
+            this.drawLine(prev, next, user_lineWidth);
+        }
+    }
 }
 
 
@@ -260,7 +271,7 @@ document.onkeydown = function(event) {
         // switch between fox and cube
         case 'c':
         	if (cupHE != undefined && cupMesh != undefined) {
-                if (isCube) {
+                if (isCube || false) {
                     obj = cupMesh;
                     objCreases = cupCreases;
                     objHE = cupHE;
@@ -291,6 +302,11 @@ document.onkeydown = function(event) {
         // create MRF and synthesize strokes
         case 'm':
             gen_synth(total_synth);
+            break;
+        case 'r':
+            while(canvas_array.length > total_strokes) {
+                var toRemove = canvas_array.pop();
+            }
             break;
     }
     canvas_array.forEach(function(element) {

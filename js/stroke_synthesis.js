@@ -7,7 +7,8 @@ var alpha = 0.9;
 var max_offset = 0;
 var offset_list = [];
 var starting_indices = [];
-var offset_length = 100;
+var offset_length = 10;
+var spacing = 10;
 
 // concatenate all existing stroke offsets into a vector
 // denote separators as an undefined offset
@@ -260,7 +261,7 @@ function synthesize_stroke(offset_num, P_mat) {
     while (gen_stroke.length < offset_num) {
         next_index = sample(prev_index, P_mat);
         console.log(next_index);
-        gen_stroke.push(new THREE.Vector2(ind, offset_list[prev_index]));
+        gen_stroke.push(new THREE.Vector2(ind * spacing, offset_list[prev_index]));
         prev_index = next_index;
         ind++;
     }
@@ -276,6 +277,38 @@ function gen_synth(stroke_num) {
         new_input();
         var cb = canvas_array[canvas_array.length-1];
         cb.stroke = synthesize_stroke(offset_length, P_mat);
-        cb.rerender();
+        cb.showSynth();
+        prev_index = next_index;
+        ind++;
+    }
+    return gen_stroke;
+}
+
+// generate synthesized stroke, based on desired number of new strokes
+function gen_synth(stroke_num) {
+    var P_mat = get_MRF(canvas_array);
+    var i;
+    var strokes = [];
+    for (i = 0; i < stroke_num; i += 1) {
+        new_input();
+        var cb = canvas_array[canvas_array.length-1];
+        cb.stroke = synthesize_stroke(offset_length, P_mat);
+        cb.showSynth();
+        prev_index = next_index;
+        ind++;
+    }
+    return gen_stroke;
+}
+
+// generate synthesized stroke, based on desired number of new strokes
+function gen_synth(stroke_num) {
+    var P_mat = get_MRF(canvas_array);
+    var i;
+    var strokes = [];
+    for (i = 0; i < stroke_num; i += 1) {
+        new_input();
+        var cb = canvas_array[canvas_array.length-1];
+        cb.stroke = synthesize_stroke(offset_length, P_mat);
+        cb.showSynth();
     }
 }

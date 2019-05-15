@@ -213,7 +213,7 @@ function getSilhouetteLines(silhouettes, mesh, edges, stroke, buffer) {
 		}
 
 		// Randomly select stroke style for line
-		stroke = canvas_array[Math.floor(rng() * total_strokes)].stroke;
+		stroke = canvas_array[Math.floor(rng() * canvas_array.length)].stroke;
 		if (stroke.length == 0) {
 			stroke = lowWavyStroke;
 		}
@@ -257,7 +257,7 @@ function getCreaseLines(creases, silhouettes, mesh, stroke, buffer) {
 			}
 
 			// Randomly select stroke style for line
-			stroke = canvas_array[Math.floor(rng() * total_strokes)].stroke;
+			stroke = canvas_array[Math.floor(rng() * canvas_array.length)].stroke;
 			if (stroke.length == 0) {
 				stroke = lowWavyStroke;
 			}
@@ -378,9 +378,9 @@ function animate() {
 
 	var objSilhouettes = getSilhouettes(camera, obj, objHE);
 	var octSilhouettes = getSilhouettes(camera, octohedron, octohedronHalfedgeGeometry.edges);
-	// if (cupHE != undefined) {
-	// 	var cupSilhouettes = getSilhouettes(camera, cupMesh, cupHE.edges);
-	// }
+	if (cupHE != undefined) {
+		var cupSilhouettes = getSilhouettes(camera, cupMesh, cupHE.edges);
+	}
 
 	controls.update();
 
@@ -412,10 +412,10 @@ function animate() {
 	lines.push(...getCreaseLines(objCreases, objSilhouettes, obj, canvas_array, outputBuffer));
 	lines.push(...getCreaseLines(octCreases, octSilhouettes, octohedron, canvas_array, outputBuffer));
 
-	// if (cupHE != undefined && cupMesh != undefined) {
-	// 	lines.push(...getSilhouetteLines(cupSilhouettes, cupMesh, cupHE.edges, randomStroke, outputBuffer));
-	// 	lines.push(...getCreaseLines(cupCreases, cupSilhouettes, cupMesh, randomStroke, outputBuffer));
-	// }
+	if (cupHE != undefined && cupMesh != undefined) {
+		lines.push(...getSilhouetteLines(cupSilhouettes, cupMesh, cupHE.edges, randomStroke, outputBuffer));
+		lines.push(...getCreaseLines(cupCreases, cupSilhouettes, cupMesh, randomStroke, outputBuffer));
+	}
 
 	render2DLines(lines);
 }
