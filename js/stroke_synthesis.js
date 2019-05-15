@@ -241,12 +241,15 @@ function get_MRF(input) {
 // given desired number of offsets, synthesize new stroke
 function synthesize_stroke(offset_num, P_mat) {
     var prev_index = starting_indices[getRandomInt(0, starting_indices.length)];
-    var gen_stroke = [offset_list[prev_index]];
+    var gen_stroke = [new THREE.Vector2(0, offset_list[prev_index])];
+    var ind = 1;
+
     while (gen_stroke.length < offset_num) {
         next_index = sample(prev_index, P_mat);
         console.log(next_index);
-        gen_stroke.push(offset_list[next_index]);
+        gen_stroke.push(new THREE.Vector2(ind, offset_list[prev_index]));
         prev_index = next_index;
+        ind++;
     }
     return gen_stroke;
 }
