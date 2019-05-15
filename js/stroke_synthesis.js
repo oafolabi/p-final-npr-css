@@ -114,7 +114,7 @@ function value_iteration(D_prime) {
     var D_prime2_new = [];
     converged = false;
     var i, j;
-
+    var steps = 0;
     while (!converged) {
         for (i = 0; i < D_prime2.length; i++) {
             var D_i = [];
@@ -124,12 +124,12 @@ function value_iteration(D_prime) {
             }
             D_prime2_new.push(D_i);
         }
-        if (arraysEqual(D_prime2, D_prime2_new)) {
+        if (arraysEqual(D_prime2, D_prime2_new) || steps > 2000) {
             converged = true;
         }
-        converged = true;
         D_prime2 = D_prime2_new;
         D_prime2_new = [];
+        steps += 1;
     }
     
     return D_prime2;
@@ -192,7 +192,7 @@ function P(D_prime2) {
     for (i = 0; i < D_prime2.length; i++) {
         var P_i = [];
         for (j = 0; j < D_prime2[0].length; j++) {
-            P_i.push(-1*safe_index(D_prime2, i+1, j)/rho);
+            P_i.push(  Math.exp(-1*safe_index(D_prime2, i+1, j)/rho));
         }
         P_mat.push(P_i);
     }
@@ -230,7 +230,7 @@ function sample(i, P_mat) {
     while (CDF[CDFindex] <= s) {
         CDFindex++;
     }
-    return Math.max(0, CDFindex-1);
+    return Math.min(CDFindex, row.length-1);
 }
 
 // given list of canvas inputs, generate probablity matrix for synthesized strokes
