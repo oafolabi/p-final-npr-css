@@ -5,7 +5,7 @@ var total_strokes = 3; // number of strokes specified
 var user_lineWidth = 5;
 var thicknessOrder = [];
 var seed = 0;
-var total_synth = 1; // total amount of strokes synthesized
+var total_synth = 3; // total amount of strokes synthesized
 
 // global stroke res controls
 var resolution = 100;
@@ -39,7 +39,7 @@ class CanvasBlock {
         this.input_canvas.width = input_width;
         this.input_canvas.height = input_height;
         this.input_ctx = this.input_canvas.getContext("2d");
-        this.input_canvas.style = "right: 0; display:block; z-index:11; box-shadow: 0px 0px 10px grey;";
+        this.input_canvas.style = "right: 0; display:block; z-index:11; box-shadow: 0px 0px 10px grey; background-color:white;";
         this.input_canvas.style.width = input_width.toString() + "px";
         this.input_canvas.style.height = input_height.toString() + "px";
         if (parent != null) {
@@ -225,11 +225,12 @@ class CanvasBlock {
 
     showSynth() {
         this.spawn_gui();
-        for (var i = 1; i < this.stroke.length - 1; i += 1) {
-            var prev = this.stroke[i];
-            var next = this.stroke[i+1];
-            prev.y = this.basePathY + prev.y;
-            next.y = this.basePathY + next.y;
+        for (var i = 0; i < this.stroke.length - 1; i += 1) {
+            var prev = new THREE.Vector2(this.stroke[i].x, this.stroke[i].y + this.basePathY);
+            var next = new THREE.Vector2(this.stroke[i+1].x, this.stroke[i+1].y + this.basePathY);
+            console.log("base " + this.basePathY);
+            console.log(prev.y);
+            console.log(next.y);
             this.drawLine(prev, next, user_lineWidth);
         }
     }

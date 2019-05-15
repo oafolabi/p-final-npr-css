@@ -7,8 +7,8 @@ var alpha = 0.9;
 var max_offset = 0;
 var offset_list = [];
 var starting_indices = [];
-var offset_length = 10;
-var spacing = 10;
+var offset_length = 20;
+var spacing = 20;
 
 // concatenate all existing stroke offsets into a vector
 // denote separators as an undefined offset
