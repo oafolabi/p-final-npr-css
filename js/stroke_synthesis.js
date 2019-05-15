@@ -14,7 +14,7 @@ var offset_length = 10;
 // TODO: support range?
 function concatStrokes(input_array) {
     var i;
-    var y; // vector of offsets
+    var y = []; // vector of offsets
     var index = 0;
     for (i = 0; i < total_strokes; i += 1) {
         index = pushStrokes(input_array[i], y, index);
@@ -91,7 +91,6 @@ function kernel(D, i, j) {
     var sum = 0;
     var k;
     for (k = 0; k <= m; k += 1) {
-        count += 1;
         sum += (1 / m) * safe_index(D, i - k, j - k);
     }
     return sum;
@@ -111,16 +110,16 @@ function safe_index(D, i, j){
 // Computing D"
 function value_iteration(D_prime) {
     var D_prime2 = D_prime;
-    var D_prime2_new;
+    var D_prime2_new = [];
     converged = false;
     var i, j;
 
     while (!converged) {
         for (i = 0; i < D_prime2.length; i++) {
             var D_i = [];
-            var mi = alpha * Math.min(...D_prime2[j]);
             for (j = 0; j < D_prime2[0].length; j++) {
-                D_i.push( Math.pow(D_prime[i][j], p) + mi  );
+                var mj = alpha * Math.min(...D_prime2[j]);
+                D_i.push( Math.pow(D_prime[i][j], p) + mj  );
             }
             D_prime2_new.push(D_i);
         }
@@ -149,12 +148,14 @@ function arraysEqual(a, b) {
     return true;
 }
 
+const arrSum = arr => arr.reduce((a,b) => a + b, 0)
+
 function normalize(P) {
     var sum = 0;
     var i;
     var j;
     for (i = 0; i < P.length; i++) {
-        sum += Math.sum(P[i]);
+        sum += arrSum(P[i]);
     }
     for (i = 0; i < P.length; i++) {
         for (j = 0; j < P.length[0]; j++) {
@@ -224,14 +225,14 @@ function sample(i, P_mat) {
 
 // given list of canvas inputs, generate probablity matrix for synthesized strokes
 function get_MRF(input) {
-    return P( value_iteration( evalD_Prime( constructDMat( concatStrokes(input) ) ) ) );
+    return P( value_iteration( evalD_prime( constructDMat( concatStrokes(input) ) ) ) );
 }
 
 // given desired number of offsets, synthesize new stroke
 function synthesize_stroke(offset_num, P_mat) {
     var prev_index = starting_indices[getRandomInt(starting_indices.length)];
     var gen_stroke = [offset_list[prev_index]];
-    while (index_list.length < offset_num) {
+    while (offset_list.length < offset_num) {
         next_index = sample(prev_index, P_mat);
         gen_stroke.push(offset_list[next_index]);
         prev_index = next_index;
