@@ -3,7 +3,7 @@
 var K = Math.pow(10, 4); // constant
 var m = 4; // constant
 var p = 2;
-var alpha = 0.999;
+var alpha = 0.9;
 var max_offset = 0;
 var offset_list = [];
 var starting_indices = [];
@@ -65,8 +65,10 @@ function constructDMat(y) {
 function evalD_ij(offset_i, offset_j) {
     if (offset_j == undefined) {
         return K;
+    } else if (offset_j == offset_i) {
+        return 2;
     } else if (offset_i == undefined) {
-        return 0;
+        return 2;
     } else {
         return Math.abs(offset_i - offset_j);
     }
@@ -110,7 +112,14 @@ function safe_index(D, i, j){
 
 // Computing D"
 function value_iteration(D_prime) {
-    var D_prime2 = D_prime;
+    var D_prime2 = [];
+    for (i = 0; i < D_prime.length; i++) {
+        var D_i = [];
+        for (j = 0; j < D_prime[0].length; j++) {
+            D_i.push( Math.pow(D_prime[i][j], p)  );
+        }
+        D_prime2.push(D_i);
+    }
     var D_prime2_new = [];
     converged = false;
     var i, j;
@@ -124,7 +133,7 @@ function value_iteration(D_prime) {
             }
             D_prime2_new.push(D_i);
         }
-        if (arraysEqual(D_prime2, D_prime2_new) || steps > 2000) {
+        if (arraysEqual(D_prime2, D_prime2_new) || steps > 200000) {
             converged = true;
         }
         D_prime2 = D_prime2_new;
@@ -218,6 +227,10 @@ function sample(i, P_mat) {
     var row = P_mat[i];
     var CDF = [];
     var j;
+    var sum = arrSum(row);
+    for (j = 0; j < row.length; j++) {
+        row[j] /= sum;
+    }
     for (j = 0; j < row.length; j++) {
         if (j == 0) {
             CDF.push(row[j]);
@@ -230,7 +243,7 @@ function sample(i, P_mat) {
     while (CDF[CDFindex] <= s) {
         CDFindex++;
     }
-    return Math.min(CDFindex, row.length-1);
+    return Math.max(0, Math.min(CDFindex, row.length-1));
 }
 
 // given list of canvas inputs, generate probablity matrix for synthesized strokes
