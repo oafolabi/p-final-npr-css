@@ -70,8 +70,11 @@ var cupCreases;
 {
     const loader = new THREE.OBJLoader();
     loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/ucbugg_fox_lowpoly.obj', (gltf) => {
-      var root = gltf;
-	  var cup = root.getObjectByName('fox:fox_mesh');
+	  var root = gltf;
+	var cup = root.getObjectByName('fox:fox_shape');
+	  // var cup = root.getObjectByName('pCubeShape1_MASH1_Instancer_120');
+	// var cup = root.getObjectByName('polySurface1');
+	// var cup = root.getObjectByName('pPlane1');
 	//   cup = false;
       if (cup) {
         var queue = [cup];

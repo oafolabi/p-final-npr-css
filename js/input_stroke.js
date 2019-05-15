@@ -5,6 +5,7 @@ var total_strokes = 3; // number of strokes specified
 var user_lineWidth = 5;
 var thicknessOrder = [];
 var seed = 0;
+var total_synth = 3; // total amount of strokes synthesized
 
 // global stroke res controls
 var resolution = 100;
@@ -229,7 +230,7 @@ class CanvasBlock {
 
 //
 // setup canvas
-function new_input(prev) {
+function new_input() {
     input_width = resolution;
     input_height = 100;
     parent = null;
@@ -286,6 +287,10 @@ document.onkeydown = function(event) {
         // decrease gui size
         case '[':
             gui_size -= 100;
+            break;
+        // create MRF and synthesize strokes
+        case 'm':
+            gen_synth(total_synth);
             break;
     }
     canvas_array.forEach(function(element) {
