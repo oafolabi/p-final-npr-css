@@ -7,7 +7,7 @@ var alpha = 0.999;
 var max_offset = 0;
 var offset_list = [];
 var starting_indices = [];
-var offset_length = 10;
+var offset_length = 100;
 
 // concatenate all existing stroke offsets into a vector
 // denote separators as an undefined offset
@@ -16,6 +16,7 @@ function concatStrokes(input_array) {
     var i;
     var y = []; // vector of offsets
     var index = 0;
+    starting_indices = [];
     for (i = 0; i < total_strokes; i += 1) {
         index = pushStrokes(input_array[i], y, index);
     }
@@ -162,6 +163,7 @@ function normalize(P) {
             P[i][j] /= sum;
         }
     }
+    return P;
 }
 
 function get_rho(D_prime2) {
@@ -205,6 +207,13 @@ function getRandomInt(min, max) {
 
 // Sample from the distribution given by [P], conditioned on row i
 function sample(i, P_mat) {
+    if (i >= P_mat.length) {
+        console.log(i);
+        console.log(P_mat.length);
+        console.log("bad news");
+    } else {
+        console.log("its ok");
+    }
     var row = P_mat[i];
     var CDF = [];
     var j;
@@ -230,7 +239,7 @@ function get_MRF(input) {
 
 // given desired number of offsets, synthesize new stroke
 function synthesize_stroke(offset_num, P_mat) {
-    var prev_index = starting_indices[getRandomInt(starting_indices.length)];
+    var prev_index = starting_indices[getRandomInt(0, starting_indices.length)];
     var gen_stroke = [offset_list[prev_index]];
     while (offset_list.length < offset_num) {
         next_index = sample(prev_index, P_mat);
