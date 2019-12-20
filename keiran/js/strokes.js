@@ -8,9 +8,9 @@ var ctx = canvas.getContext("2d");
 
 canvas.style = "pointer-events: none; z-index:10"
 
-var renderer = new THREE.WebGLRenderer();
+var renderer = new THREE.WebGLRenderer({alpha : true});
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0xffffff);
+renderer.setClearColor(0xffffff, 0);
 document.body.appendChild(renderer.domElement);
 document.body.appendChild(canvas);
 
