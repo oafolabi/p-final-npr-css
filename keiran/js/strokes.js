@@ -29,83 +29,25 @@ var cupLines;
 var cupCreases;
 
 {
-    const loader = new THREE.ColladaLoader();
-    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/meshedit/teapot.dae', (gltf) => {
-      var root = gltf.scene;
-	  var cup = root.getObjectByName('Scene');
-	  cup = false;
-      if (cup) {
-        var queue = [cup];
-        while (queue.length > 0) {
-            var element = queue[0];
-            if (element instanceof THREE.Mesh) {
-              var ge = new THREE.Geometry().fromBufferGeometry( element.geometry );
-              var me = new THREE.Mesh( ge, redMaterial);
-              cupMesh = me;
-              scene.add(me);
-              // cupMesh.push(me);
-
-              var he = convertToHalfEdge(ge);
-              cupHE = he;
-              // cupHE.push(he);
-              // addSillhouetteStrokes(he, ge, me);
-              me.position.set(4, 0, 0);
-			  createEdgeDetectionMesh(me, he.edges);
-			  cupWireframe = new THREE.WireframeGeometry(ge);
-			  cupLines = new THREE.LineSegments(cupWireframe);
-			  cupLines.position.set(4, 0, 0);
-			  scene.add(cupLines);
-			  cupLines.visible = false;
-			  cupCreases = getCreases(me, he.edges);
-
-            }
-            for (const e of element.children) {
-                queue.push(e);
-            }
-            queue.shift();
-        }
-	}}, undefined, undefined);
-}
-
-{
     const loader = new THREE.OBJLoader();
-    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/ucbugg_fox_lowpoly.obj', (gltf) => {
-	  var root = gltf;
-		var cup = root.getObjectByName('fox:fox_mesh');
-	  // var cup = root.getObjectByName('pCubeShape1_MASH1_Instancer_120');
-	// var cup = root.getObjectByName('polySurface1');
-	// var cup = root.getObjectByName('pPlane1');
-	//   cup = false;
-      if (cup) {
-        var queue = [cup];
-        while (queue.length > 0) {
-            var element = queue[0];
-            if (element instanceof THREE.Mesh) {
-			  var ge = new THREE.Geometry().fromBufferGeometry( element.geometry );
-			  ge.scale(0.2, 0.2, 0.2);
-              var me = new THREE.Mesh( ge, redMaterial);
-              cupMesh = me;
-              scene.add(me);
+    loader.load('https://raw.githubusercontent.com/oafolabi/p-final-npr-css/master/models/model.obj', // called when resource is loaded
+	function ( object ) {
 
-              var he = convertToHalfEdge(ge);
-              cupHE = he;
-              // addSillhouetteStrokes(he, ge, me);
-              me.position.set(-2, -1, 0);
-			  createEdgeDetectionMesh(me, he.edges);
-			  cupWireframe = new THREE.WireframeGeometry(ge);
-			  cupLines = new THREE.LineSegments(cupWireframe);
-			  cupLines.position.set(-2, -1, 0);
-			  scene.add(cupLines);
-			  cupLines.visible = false;
-			  cupCreases = getCreases(me, he.edges);
+		scene.add( object );
 
-            }
-            for (const e of element.children) {
-                queue.push(e);
-            }
-            queue.shift();
-        }
-    }}, undefined, undefined);
+	},
+	// called when loading is in progresses
+	function ( xhr ) {
+
+		console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+
+	},
+	// called when loading has errors
+	function ( error ) {
+
+		console.log( 'An error happened' );
+
+	});
 }
 
 
@@ -116,8 +58,6 @@ var whiteMaterial = new THREE.MeshBasicMaterial({color: 0xffffff});
 var cube = new THREE.Mesh(boxGeometry, greenMaterial);
 var octohedron = new THREE.Mesh(octohedronGeometry, blueMaterial);
 
-scene.add(cube);
-scene.add(octohedron);
 
 var dirLight = new THREE.DirectionalLight(0xffffff, 1);
 dirLight.position.set(-1, 1, 1).normalize();
