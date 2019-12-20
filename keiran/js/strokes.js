@@ -208,36 +208,6 @@ function checkVisibility(point, id, buffer) {
 camera.position.z = 5;
 
 
-var wavyStroke = [];
-for (var i = 0; i < resolution; i++) {
-	wavyStroke.push(new THREE.Vector2(i * unitLength / resolution, 3 * Math.sin(2 * Math.PI * (i / (0.2 * resolution)))));
-}
-
-var loopyStroke = [];
-for (var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
-	var v = new THREE.Vector2(0.1 * unitLength * Math.cos(j) + ((j * unitLength) / (6 * Math.PI)), 0.07 * unitLength * Math.sin(j));
-	loopyStroke.push(v);
-}
-
-var lowWavyStroke = [];
-for (var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
-	var v = new THREE.Vector2(Math.cos(j) + ((j * unitLength) / (6 * Math.PI)), Math.sin(j));
-	lowWavyStroke.push(v);
-}
-
-var randomStroke = [];
-for (var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
-	var v = new THREE.Vector2(unitLength * (j * 0.9 + Math.random() * 0.03), unitLength * Math.random() * 0.04);
-	randomStroke.push(v);
-}
-
-var straightStroke = [];
-for (var j = 0; j < 10; j++) {
-	var v = new THREE.Vector2(j * unitLength / 10, 0);
-	straightStroke.push(v);
-}
-
-
 function render2DLines(lines) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 	ctx.lineWidth = user_lineWidth;
