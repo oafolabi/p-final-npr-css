@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>  
+    div.padded {  
+      padding-top: 0px;  
+      padding-right: 200px;  
+      padding-bottom: 0.25in;  
+      padding-left: 200px;  
+    }  
+  </style> 
+<title>Keiran Paster, Ryan Ong, Sirej Dua  |  CS 184</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+<br />
+<div align="middle"><a href="index.html">Home</a></div>
+<h1 align="middle">Crease-Silhouette Stroke Synthesis (CS3) - Milestone</h1>
+    
+    <div class="padded">
+    <div style="text-align:center">
+			<div style="display: inline-block; text-align: left;">
+
+		    <h2>Team Members</h2>
+		    <ul>
+		    	<li>Sirej Dua</li>
+		    	<li>Keiran Paster</li>
+		    	<li>Ryan Ong</li>
+			</ul>
+
+    <h2>Summary of Accomplishments</h2>
+    <p>Following the submission of our proposal, our team has thoroughly examined the research paper, as well as its various citations, in order to evaluate what is the best approach to implementing this specific aspect of non-photorealistic rendering. After evaluating several options, we settled on using the THREEjs library, due to its robust and intuitive features. Using a WebGL system will also allow us to offer a interactive demo for users to try during the poster session. Once Ryan imported the library and tested that it worked with Github page hosting, Sirej implemented the ability to import and display 3D models via the GLTF file format. This interface was completed with a camera script that allows us to rotate, zoom, and pan around the scene. At the same time, Keiran looked into how to render the stroke-style lines onto our canvas, settling on the THREE.Meshline library, allowing lines to be rendered via meshes with custom textures. Keiran then implemented the algorithm needed to identify which edges of a mesh compose the ‘silhouette’ of the object. This is done via a series of matrix transformations that compare the normals of each pair of faces that share an edge, and checking if they face different directions relative to the camera’s perspective (i.e. if one faces towards the camera, while the other faces away). Such edges are connected via a cycle, which is then drawn by the meshline and rendered the canvas.
+    </p>
+
+    <h2>Preliminary Results</h2>
+	<h3><a href = "keiran/index.html">Canvas</a></h2>
+    <p>Results so far have been as expected, with the meshline rendering a thick silhouette outline of simple convex 3D geometries. With our current 3D rendering system, the system can conveniently occlude strokes according to their z-depths in a multi-object scene.
+    </p>
+
+    <h2>Progress Relative to Plan</h2>
+    <p>In hindsight, our original plan’s timeline overestimated our time needed to select and setup our environment. Per our proposal, we’ve finished roughly up to a week-and-a-half’s worth of our original plan, with a week remaining to identify edges that are creases, implement stroke creation, as well as an algorithm for stroke synthesis and assignment to edges.
+    </p>
+
+    <h2>Updates to Work Plan</h2>
+	<h3>Week 4</h3>
+    <ul>
+        <li>Identify creases of the 3D model</li>
+        <li>Implement brush strokes</li>
+        <li>Stress test current edge detection system; is it fast enough?</li>
+        <li>Implement Markov Field algorithm for stroke assigning</li>
+        <li>General clean-up and polishing, toon shaders</li>
+    </ul>
+        
+    <a href = "https://youtu.be/i_23BBephJ8"><h2>Video</h2></a>
+	<iframe width="560" height="315" src="https://www.youtube.com/embed/i_23BBephJ8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	<br>
+				
+    <h2><a href = "https://drive.google.com/open?id=1jcO5TP0Dk5JBtNsfJe4JyzSJUInBw0-6Z07-gxduCro">Slides</a></h2>
+	<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vRrtip6uEPFLBFfl948LzvtdzLzJb50kltDTIhfl-xhoLxHElpj2_W_qzGSFYE1Vbb5-cq8d-_bVntj/embed?start=false&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+
+
+
+	</div>
+	</div>
+    </div>
+</body>
+</html>

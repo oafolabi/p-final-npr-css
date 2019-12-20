@@ -19,15 +19,105 @@ document.body.appendChild(canvas);
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.update();
 
+var boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+//boxGeometry = new THREE.TorusGeometry(0.6, 0.3, 8, 12);
+var octohedronGeometry = new THREE.OctahedronGeometry();
+var cupHE;
+var cupMesh;
+var cupWireframe;
+var cupLines;
+var cupCreases;
+
+{
+    const loader = new THREE.ColladaLoader();
+    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/meshedit/teapot.dae', (gltf) => {
+      var root = gltf.scene;
+	  var cup = root.getObjectByName('Scene');
+	  cup = false;
+      if (cup) {
+        var queue = [cup];
+        while (queue.length > 0) {
+            var element = queue[0];
+            if (element instanceof THREE.Mesh) {
+              var ge = new THREE.Geometry().fromBufferGeometry( element.geometry );
+              var me = new THREE.Mesh( ge, redMaterial);
+              cupMesh = me;
+              scene.add(me);
+              // cupMesh.push(me);
+
+              var he = convertToHalfEdge(ge);
+              cupHE = he;
+              // cupHE.push(he);
+              // addSillhouetteStrokes(he, ge, me);
+              me.position.set(4, 0, 0);
+			  createEdgeDetectionMesh(me, he.edges);
+			  cupWireframe = new THREE.WireframeGeometry(ge);
+			  cupLines = new THREE.LineSegments(cupWireframe);
+			  cupLines.position.set(4, 0, 0);
+			  scene.add(cupLines);
+			  cupLines.visible = false;
+			  cupCreases = getCreases(me, he.edges);
+
+            }
+            for (const e of element.children) {
+                queue.push(e);
+            }
+            queue.shift();
+        }
+	}}, undefined, undefined);
+}
 
 {
     const loader = new THREE.OBJLoader();
-    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/model.obj', function ( object ) {
+    loader.load('https://raw.githubusercontent.com/rayneong/p-final-npr-css/master/models/ucbugg_fox_lowpoly.obj', (gltf) => {
+	  var root = gltf;
+		var cup = root.getObjectByName('fox:fox_mesh');
+	  // var cup = root.getObjectByName('pCubeShape1_MASH1_Instancer_120');
+	// var cup = root.getObjectByName('polySurface1');
+	// var cup = root.getObjectByName('pPlane1');
+	//   cup = false;
+      if (cup) {
+        var queue = [cup];
+        while (queue.length > 0) {
+            var element = queue[0];
+            if (element instanceof THREE.Mesh) {
+			  var ge = new THREE.Geometry().fromBufferGeometry( element.geometry );
+			  ge.scale(0.2, 0.2, 0.2);
+              var me = new THREE.Mesh( ge, redMaterial);
+              cupMesh = me;
+              scene.add(me);
 
-		scene.add( object );
+              var he = convertToHalfEdge(ge);
+              cupHE = he;
+              // addSillhouetteStrokes(he, ge, me);
+              me.position.set(-2, -1, 0);
+			  createEdgeDetectionMesh(me, he.edges);
+			  cupWireframe = new THREE.WireframeGeometry(ge);
+			  cupLines = new THREE.LineSegments(cupWireframe);
+			  cupLines.position.set(-2, -1, 0);
+			  scene.add(cupLines);
+			  cupLines.visible = false;
+			  cupCreases = getCreases(me, he.edges);
 
-	}, undefined, undefined);
+            }
+            for (const e of element.children) {
+                queue.push(e);
+            }
+            queue.shift();
+        }
+    }}, undefined, undefined);
 }
+
+
+var greenMaterial = new THREE.MeshToonMaterial({color: 0x00ff00, shininess: 5});
+var blueMaterial = new THREE.MeshToonMaterial({color: 0x0000ff, shininess: 5});
+var redMaterial = new THREE.MeshToonMaterial({color: 0xff0000, shininess: 5});
+var whiteMaterial = new THREE.MeshBasicMaterial({color: 0xffffff});
+var cube = new THREE.Mesh(boxGeometry, greenMaterial);
+var octohedron = new THREE.Mesh(octohedronGeometry, blueMaterial);
+
+scene.add(cube);
+scene.add(octohedron);
 
 var dirLight = new THREE.DirectionalLight(0xffffff, 1);
 dirLight.position.set(-1, 1, 1).normalize();
@@ -35,7 +125,10 @@ var ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
 scene.add(ambientLight);
 scene.add(dirLight);
 
+octohedron.position.set(2, 0, 0);
 
+var boxHalfedgeGeometry = convertToHalfEdge(boxGeometry);
+var octohedronHalfedgeGeometry = convertToHalfEdge(octohedronGeometry);
 
 function getRandomColor() {
 	var letters = '0123456789ABCDEF';
@@ -46,7 +139,7 @@ function getRandomColor() {
 	return parseInt(color, 16);
 }
 
-
+var usedEdgeID = new Set();
 
 function createEdgeDetectionMesh(mesh, edges) {
 	mesh.geometry.computeVertexNormals();
@@ -92,7 +185,8 @@ function setEdgeIDEnabled(edges, enabled) {
 	}
 }
 
-
+createEdgeDetectionMesh(cube, boxHalfedgeGeometry.edges);
+createEdgeDetectionMesh(octohedron, octohedronHalfedgeGeometry.edges);
 
 function getSilhouetteLines(silhouettes, mesh, edges, stroke, buffer) {
 	var edgesHash = {};
@@ -207,6 +301,47 @@ function checkVisibility(point, id, buffer) {
 
 camera.position.z = 5;
 
+var cubeWireframe = new THREE.WireframeGeometry(boxGeometry);
+var cubeLines = new THREE.LineSegments(cubeWireframe);
+var octWireframe = new THREE.WireframeGeometry(octohedronGeometry);
+var octLines = new THREE.LineSegments(octWireframe);
+octLines.position.set(2, 0, 0);
+scene.add(cubeLines);
+scene.add(octLines);
+
+cubeLines.visible = false;
+octLines.visible = false;
+
+var wavyStroke = [];
+for (var i = 0; i < resolution; i++) {
+	wavyStroke.push(new THREE.Vector2(i * unitLength / resolution, 3 * Math.sin(2 * Math.PI * (i / (0.2 * resolution)))));
+}
+
+var loopyStroke = [];
+for (var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
+	var v = new THREE.Vector2(0.1 * unitLength * Math.cos(j) + ((j * unitLength) / (6 * Math.PI)), 0.07 * unitLength * Math.sin(j));
+	loopyStroke.push(v);
+}
+
+var lowWavyStroke = [];
+for (var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
+	var v = new THREE.Vector2(Math.cos(j) + ((j * unitLength) / (6 * Math.PI)), Math.sin(j));
+	lowWavyStroke.push(v);
+}
+
+var randomStroke = [];
+for (var j = 0; j < 6 * Math.PI; j += 2 * Math.PI / 30) {
+	var v = new THREE.Vector2(unitLength * (j * 0.9 + Math.random() * 0.03), unitLength * Math.random() * 0.04);
+	randomStroke.push(v);
+}
+
+var straightStroke = [];
+for (var j = 0; j < 10; j++) {
+	var v = new THREE.Vector2(j * unitLength / 10, 0);
+	straightStroke.push(v);
+}
+
+stroke_input = lowWavyStroke;
 
 function render2DLines(lines) {
 	ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -229,6 +364,13 @@ function render2DLines(lines) {
 	}
 }
 
+var cubeCreases = getCreases(cube, boxHalfedgeGeometry.edges);
+var octCreases = getCreases(octohedron, octohedronHalfedgeGeometry.edges);
+
+var objCreases = cubeCreases;
+var obj = cube;
+var cubeHE = boxHalfedgeGeometry.edges;
+var objHE = cubeHE;
 
 function animate() {
 
@@ -277,3 +419,4 @@ function animate() {
 
 	render2DLines(lines);
 }
+animate();
